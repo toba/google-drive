@@ -1,36 +1,17 @@
 import * as Stream from 'stream';
-import { is, Header, MimeType, HttpStatus } from '@toba/utility';
-import { log } from '@toba/logger';
+import { is, merge, Header, MimeType, HttpStatus } from '@toba/tools';
 import { Token, Config as AuthConfig } from '@toba/oauth';
 import { google } from 'googleapis';
-import { GoogleDrive } from './types';
+import { GoogleDrive, Scope, GenerateAuthUrlOpts } from './types';
 // google-auth-library is included by `googleapis` and only needed directly
 // for its type information
 import { OAuth2Client } from 'google-auth-library';
-
-interface GenerateAuthUrlOpts {
-   response_type?: string;
-   client_id?: string;
-   redirect_uri?: string;
-   scope?: string[] | string;
-}
 
 export interface ClientConfig {
    apiKey: string;
    folderID: string;
    auth: AuthConfig;
    scope?: Scope | Scope[];
-}
-
-/**
- * Google access scopes.
- *
- * https://developers.google.com/drive/web/scopes
- */
-export enum Scope {
-   DriveReadWrite = 'https://www.googleapis.com/auth/drive',
-   DriveReadOnly = 'https://www.googleapis.com/auth/drive.readonly',
-   PhotoReadOnly = 'https://www.googleapis.com/auth/drive.photos.readonly'
 }
 
 /**
@@ -44,8 +25,8 @@ export const minuteEarlier = (ms: number) => {
 };
 
 export class GoogleDriveClient {
-   config: ClientConfig;
-   oauth: OAuth2Client;
+   private config: ClientConfig;
+   private oauth: OAuth2Client;
    private _drive: GoogleDrive;
 
    constructor(config: ClientConfig) {
@@ -61,9 +42,9 @@ export class GoogleDriveClient {
       }
    }
 
-   get drive() {
+   private get drive() {
       if (this._drive === null) {
-         this._drive = google.drive('v3');
+         this._drive = google.drive('v3') as GoogleDrive;
       }
       return this._drive;
    }
@@ -105,32 +86,32 @@ export class GoogleDriveClient {
          refresh_token: this.token.refresh
       };
 
+      if (!this.accessTokenExpired) {
+         return Promise.resolve();
+      }
+
       return new Promise((resolve, reject) => {
-         if (this.accessTokenExpired) {
-            this.oauth.refreshAccessToken((err: Error, tokens) => {
-               if (is.value(err)) {
-                  log.error(
-                     'Unable to refresh Google access token: %s',
-                     err.message
-                  );
-                  reject(err);
-               } else {
-                  //log.infoIcon('lock_outline', 'Refreshed Google access token');
+         this.oauth.refreshAccessToken((err: Error, tokens) => {
+            if (is.value(err)) {
+               // log.error(
+               //    'Unable to refresh Google access token: %s',
+               //    err.message
+               // );
+               reject(err);
+            } else {
+               //log.infoIcon('lock_outline', 'Refreshed Google access token');
 
-                  this.oauth.credentials = tokens;
+               this.oauth.credentials = tokens;
 
-                  this.token.type = tokens.token_type;
-                  this.token.access = tokens.access_token;
-                  this.token.accessExpiration = minuteEarlier(
-                     tokens.expiry_date
-                  );
+               this.token.type = tokens.token_type;
+               this.token.access = tokens.access_token;
+               this.token.accessExpiration = minuteEarlier(
+                  tokens.expiry_date
+               );
 
-                  resolve();
-               }
-            });
-         } else {
-            resolve();
-         }
+               resolve();
+            }
+         });
       });
    }
 
@@ -156,10 +137,10 @@ export class GoogleDriveClient {
    }
 
    loadFile(fileName: string, stream: Stream.Writable): Promise<string> {
-      return this.verifyToken().then((): Promise<string> => {
+      return this.verifyToken().then(() => {
          const options = {
             auth: this.oauth,
-            q: `name = '${fileName}.gpx' and '${
+            q: `name = '${fileName}' and '${
                this.config.folderID
             }' in parents`
          };
@@ -177,11 +158,11 @@ export class GoogleDriveClient {
                // try HTTP errors again
                //post.triedTrack = false;
             } else if (err !== null) {
-               throw `Error finding file for “${fileName}”: ${err.message}`;
+               throw `Error finding “${fileName}”: ${err.message}`;
             } else if (files.length == 0) {
                // no matches
                //post.hasTrack = false;
-               throw `No file found for “${fileName}”`;
+               throw `File not found: “${fileName}”`;
             } else {
                const file = files[0];
                // let purpose = 'Retrieving';
