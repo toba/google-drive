@@ -23,15 +23,17 @@ const config: ClientConfig = {
    }
 };
 
+const client = new Client(config);
+
 test('creates OAuth client', () => {
-   expect(google.auth.client).toBeDefined();
+   expect(client.oauth.client).toBeDefined();
 });
 
 test('genenerates authorization URL', () => {
-   const url = google.auth.url();
+   const url = client.url();
    expect(url).toBeDefined();
-   expect(url).to.include(authConfig.clientID);
-   expect(url).to.include(config.domain);
+   expect(url).toHaveProperty(authConfig.clientID);
+   expect(url).toHaveProperty(config.domain);
 });
 
 test('tests for expired access token', () => {
@@ -48,11 +50,11 @@ test('refreshes access token', () => {
    });
 });
 
-test('retrieve GPX file content', () =>
-   factory
-      .buildLibrary()
-      .then(library => library.postWithKey('owyhee-snow-and-sand/lowlands'))
-      .then(post => google.drive.loadGPX(post))
-      .then(gpxText => {
-         expect(gpxText).toBeDefined();
-      }));
+// test('retrieve GPX file content', () =>
+//    factory
+//       .buildLibrary()
+//       .then(library => library.postWithKey('owyhee-snow-and-sand/lowlands'))
+//       .then(post => google.drive.loadGPX(post))
+//       .then(gpxText => {
+//          expect(gpxText).toBeDefined();
+//       }));

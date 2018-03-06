@@ -1,8 +1,26 @@
 import * as Stream from 'stream';
-import { is, merge, Header, MimeType, HttpStatus } from '@toba/tools';
+import {
+   is,
+   merge,
+   Header,
+   MimeType,
+   HttpStatus,
+   inferMimeType
+} from '@toba/tools';
 import { Token, Config as AuthConfig } from '@toba/oauth';
 import { google } from 'googleapis';
-import { GoogleDrive, Scope, GenerateAuthUrlOpts } from './types';
+import {
+   GoogleDrive,
+   Scope,
+   GenerateAuthUrlOpts,
+   DriveResponse,
+   RequestConfig,
+   RequestError,
+   DriveFile,
+   ListFilesParams,
+   GetFileParams,
+   QuerySpace
+} from './types';
 // google-auth-library is included by `googleapis` and only needed directly
 // for its type information
 import { OAuth2Client } from 'google-auth-library';
@@ -75,22 +93,28 @@ export class GoogleDriveClient {
       );
    }
 
+   get requestConfig(): RequestConfig {
+      return {
+         auth: this.oauth
+      };
+   }
+
    /**
-    * Refresh access token and proceed.
+    * Refresh access token as needed and proceed.
     *
     * https://developers.google.com/drive/v3/web/quickstart/nodejs
     */
-   verifyToken() {
+   verifyToken(): Promise<any> {
       this.oauth.credentials = {
          access_token: this.token.access,
          refresh_token: this.token.refresh
       };
 
       if (!this.accessTokenExpired) {
-         return Promise.resolve();
+         return Promise.resolve(null);
       }
 
-      return new Promise((resolve, reject) => {
+      return new Promise<any>((resolve, reject) => {
          this.oauth.refreshAccessToken((err: Error, tokens) => {
             if (is.value(err)) {
                // log.error(
@@ -105,9 +129,7 @@ export class GoogleDriveClient {
 
                this.token.type = tokens.token_type;
                this.token.access = tokens.access_token;
-               this.token.accessExpiration = minuteEarlier(
-                  tokens.expiry_date
-               );
+               this.token.accessExpiration = minuteEarlier(tokens.expiry_date);
 
                resolve();
             }
@@ -136,100 +158,147 @@ export class GoogleDriveClient {
       });
    }
 
-   loadFile(fileName: string, stream: Stream.Writable): Promise<string> {
-      return this.verifyToken().then(() => {
-         const options = {
-            auth: this.oauth,
-            q: `name = '${fileName}' and '${
-               this.config.folderID
-            }' in parents`
-         };
+   /**
+    * List of files matching query parameter.
+    *
+    * https://developers.google.com/drive/v3/web/search-parameters
+    */
+   getFileList(
+      params: ListFilesParams,
+      config: RequestConfig = this.requestConfig
+   ): Promise<DriveFile[]> {
+      return new Promise((resolve, reject) => {
+         this.drive.files.list(
+            params,
+            config,
+            (err: RequestError, res: DriveResponse) => {
+               if (is.value(err)) {
+                  reject(err);
+               } else if (res.status != HttpStatus.OK) {
+                  reject('');
+               } else if (
+                  is.defined(res, 'data') &&
+                  is.defined(res.data, 'files')
+               ) {
+                  resolve(res.data.files);
+               } else {
+                  reject('');
+               }
+            }
+         );
+      });
+   }
 
-         this.drive.files.list(options, (err: any, res: any) => {
-            // set flag so it isn't tried repeatedly
-            //post.triedTrack = true;
-
-            const files: any[] =
-               is.defined(res, 'data') && is.defined(res.data, 'files')
-                  ? res.data.files
-                  : [];
-
-            if (res.status != HttpStatus.OK) {
-               // try HTTP errors again
-               //post.triedTrack = false;
-            } else if (err !== null) {
-               throw `Error finding “${fileName}”: ${err.message}`;
-            } else if (files.length == 0) {
-               // no matches
-               //post.hasTrack = false;
-               throw `File not found: “${fileName}”`;
+   getFileData(
+      params: GetFileParams,
+      fileName: string = null,
+      config: RequestConfig = this.requestConfig
+   ): Promise<string> {
+      return new Promise((resolve, reject) => {
+         this.drive.files.get(params, config, (err: RequestError, res) => {
+            if (is.value(err)) {
+               reject(err);
+            } else if (res.status != HttpStatus.OK) {
+               //reject('Server returned ' + res.status);
+            } else if (is.defined(res, 'data')) {
+               //post.hasTrack = true;
+               resolve(res.data);
             } else {
-               const file = files[0];
-               // let purpose = 'Retrieving';
-               // let icon = 'save';
-
-               // if (is.value(stream)) {
-               //    purpose = 'Downloading';
-               //    icon = 'file_download';
-               // }
-               // log.infoIcon(
-               //    icon,
-               //    '%s GPX for “%s” (%s)',
-               //    purpose,
-               //    post.title,
-               //    file.id
-               // );
-               return this.downloadFile(file.id, stream);
+               let msg = 'No data returned for file';
+               if (fileName != null) {
+                  msg += ' ' + fileName;
+               }
+               reject(msg);
             }
          });
       });
    }
 
    /**
-    * Google downloader uses Request module
+    * Send file content directly to writable stream.
     */
-   downloadFile(fileId: string, stream?: Stream.Writable) {
+   streamFile(
+      params: GetFileParams,
+      stream: Stream.Writable,
+      fileName: string = null,
+      config: RequestConfig = this.requestConfig
+   ): Promise<any> {
+      return new Promise((resolve, reject) => {
+         stream.on('finish', resolve);
+
+         this.drive.files
+            .get(params, config)
+            .on('error', (err: RequestError) => {
+               reject(err);
+            })
+            .on('end', () => {
+               //post.hasTrack = true;
+            })
+            .on('response', (res: any) => {
+               // response headers are piped directly to the stream so changes
+               // must happen here
+               let mimeType = 'application/octet-stream';
+
+               if (fileName === null) {
+                  fileName = new Date().toDateString();
+               } else {
+                  mimeType = inferMimeType(fileName);
+               }
+
+               res.headers[
+                  Header.Content.Disposition.toLowerCase()
+               ] = `attachment; filename=${fileName}`;
+               res.headers[Header.Content.Type.toLowerCase()] = mimeType;
+            })
+            .pipe(stream);
+      });
+   }
+
+   /**
+    * Find file with name by creating query and retrieving with ID of first
+    * matching item.
+    */
+   fileWithName(fileName: string, stream?: Stream.Writable): Promise<{}> {
       return this.verifyToken().then(() => {
-         const options: googleAPIs.QueryOptions = {
+         const params: ListFilesParams = {
+            q: `name = '${fileName}' and '${this.config.folderID}' in parents`,
+            spaces: QuerySpace.Drive
+         };
+
+         return this.getFileList(params).then(files => {
+            if (files.length == 0) {
+               //post.hasTrack = false;
+               throw `File not found: “${fileName}”`;
+            } else {
+               const file = files[0];
+               return this.fileWithID(file.id, stream);
+            }
+         });
+      });
+   }
+
+   /**
+    * Note that Google downloader uses Request module.
+    *
+    * https://developers.google.com/drive/v3/web/manage-downloads
+    */
+   fileWithID(
+      fileId: string,
+      stream?: Stream.Writable,
+      fileName: string = null
+   ): Promise<any> {
+      return this.verifyToken().then(() => {
+         const params: GetFileParams = {
             fileId,
-            auth: this.oauth,
             alt: 'media',
             timeout: 10000
          };
+
          if (is.value(stream)) {
-            // pipe to stream
-            stream.on('finish', resolve);
-            this.drive
-               .files.get(options)
-               .on('error', (err: any) => { throw err; })
-               .on('end', () => {
-                  //post.hasTrack = true;
-               })
-               .on('response', (res: any) => {
-                  // response headers are piped directly to the stream so changes
-                  // must happen here
-                  res.headers[
-                     Header.Content.Disposition.toLowerCase()
-                  ] = `attachment; filename=${post.key}.gpx`;
-                  res.headers[Header.Content.Type.toLowerCase()] =
-                     MimeType.GPX;
-               })
-               .pipe(stream);
+            return this.streamFile(params, stream, fileName);
          } else {
-            // capture file contents
-            this.drive.files.get(options, (err: Error, res: any) => {
-               if (is.value(err)) {
-                  //reject(err);
-               } else if (res.status != HttpStatus.OK) {
-                  //reject('Server returned ' + res.status);
-               } else if (is.defined(res, 'data')) {
-                  //post.hasTrack = true;
-                  //resolve(res.data);
-               } else {
-                  //reject('No data returned for file ' + fileId);
-               }
-            });
+            return this.getFileData(params, fileName);
          }
       });
-   )
+   }
 }
