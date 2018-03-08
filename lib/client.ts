@@ -65,7 +65,7 @@ export class GoogleDriveClient {
       return this.config.auth.token;
    }
 
-   authorizationURL() {
+   get authorizationURL(): string {
       const scope = this.config.scope;
 
       return this.oauth.generateAuthUrl({
@@ -104,11 +104,13 @@ export class GoogleDriveClient {
          refresh_token: this.token.refresh
       };
 
-      if (!this.accessTokenExpired) {
-         return Promise.resolve(null);
-      }
+      return !this.accessTokenExpired
+         ? Promise.resolve()
+         : this.refreshAccessToken();
+   }
 
-      return new Promise<any>((resolve, reject) => {
+   refreshAccessToken() {
+      return new Promise<void>((resolve, reject) => {
          this.oauth.refreshAccessToken((err: Error, tokens) => {
             if (is.value(err)) {
                // log.error(

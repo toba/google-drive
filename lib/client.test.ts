@@ -20,18 +20,38 @@ const config: ClientConfig = {
    } as AuthConfig
 };
 
-const client = new Client(config);
+let client: Client;
+let isConfigured = false;
+
+beforeAll(() => {
+   isConfigured = config.apiKey !== undefined;
+   if (isConfigured) {
+      client = new Client(config);
+   }
+}
+
+test('relies on configured API key', () => {
+   expect(config.apiKey).toBeDefined();
+});
+
+test('returns current token', ()=> {
+   if (!isConfigured) { return; }
+   expect(client.token).toBe(config.auth.token);
+})
 
 test('creates Google client', () => {
+   if (!isConfigured) { return; }
    expect(client).toBeDefined();
 });
 
 test('creates Drive client', () => {
+   if (!isConfigured) { return; }
    expect(client.drive).toBeDefined();
 });
 
 test('genenerates authorization URL', () => {
-   const url = client.authorizationURL();
+   if (!isConfigured) { return; }
+   const url = client.authorizationURL;
    expect(url).toBeDefined();
    expect(/google/.test(url)).toBe(true);
 
@@ -40,25 +60,24 @@ test('genenerates authorization URL', () => {
 });
 
 test('tests for expired access token', () => {
+   if (!isConfigured) { return; }
    expect(client.accessTokenExpired).toBe(true);
-   //const now = new Date();
-   //config.auth.token.accessExpiration = now.setDate(now.getDate() + 1);
+   const later = new Date();
+   later.setDate(later.getDate() + 1)
+   config.auth.token.accessExpiration = later;
    expect(client.accessTokenExpired).toBe(false);
 });
 
-// test('refreshes access token', () => {
-//    authConfig.token.accessExpiration = null;
-//    return google.auth.verify().then(() => {
-//       expect(authConfig.token.accessExpiration).toBeDefined();
-//       expect(authConfig.token.accessExpiration).toBeInstanceOf(Date);
-//    });
-// });
+test('refreshes access token', () => {
+   if (!isConfigured) { return; }
+   client.token.accessExpiration = null;
+   return client.verifyToken().then(() => {
+      expect(client.token.accessExpiration).toBeDefined();
+      expect(client.token.accessExpiration).toBeInstanceOf(Date);
+   });
+});
 
-// test('retrieve GPX file content', () =>
-//    factory
-//       .buildLibrary()
-//       .then(library => library.postWithKey('owyhee-snow-and-sand/lowlands'))
-//       .then(post => google.drive.loadGPX(post))
-//       .then(gpxText => {
-//          expect(gpxText).toBeDefined();
-//       }));
+test('retrieve `file content', () =>
+   client.fileWithName('Boiling Over.gpx').then(gpxText => {
+      expect(gpxText).toBeDefined();
+   }));
