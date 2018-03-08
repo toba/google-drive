@@ -1,12 +1,5 @@
 import * as Stream from 'stream';
-import {
-   is,
-   merge,
-   Header,
-   MimeType,
-   HttpStatus,
-   inferMimeType
-} from '@toba/tools';
+import { is, Header, HttpStatus, inferMimeType } from '@toba/tools';
 import { Token, Config as AuthConfig } from '@toba/oauth';
 import { google } from 'googleapis';
 import {
@@ -54,13 +47,14 @@ export class GoogleDriveClient {
          config.auth.secret,
          config.auth.callback
       );
+      this._drive = null;
 
       if (is.empty(this.config.scope)) {
          this.config.scope = Scope.DriveReadOnly;
       }
    }
 
-   private get drive() {
+   get drive() {
       if (this._drive === null) {
          this._drive = google.drive('v3') as GoogleDrive;
       }

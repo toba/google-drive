@@ -3,9 +3,9 @@ import {
    GlobalOptions,
    APIRequestMethodParams as RequestConfig
 } from 'googleapis/build/src/lib/api';
-import { AxiosRequestConfig, AxiosResponse } from 'axios';
-import { HttpStatus } from '@toba/tools';
-import { OAuth2Client } from 'google-auth-library';
+import { AxiosResponse } from 'axios';
+//import { HttpStatus } from '@toba/tools';
+//import { OAuth2Client } from 'google-auth-library';
 import { EventEmitter } from 'events';
 
 //AxiosRequestConfig as RequestConfig
