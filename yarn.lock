@@ -42,9 +42,9 @@
     jest-localstorage-mock "^2.2.0"
     ts-jest "^22.4.0"
 
-"@toba/tools@^1.8.1":
-  version "1.8.1"
-  resolved "https://registry.yarnpkg.com/@toba/tools/-/tools-1.8.1.tgz#ae9fa16852de281cb9364b07961a672e8677a385"
+"@toba/tools@^1.9.0":
+  version "1.9.0"
+  resolved "https://registry.yarnpkg.com/@toba/tools/-/tools-1.9.0.tgz#0e072a928e0e0c7dc7e04e77c3d15aa2c3b68250"
 
 "@types/jest@^22.1.1":
   version "22.1.4"
