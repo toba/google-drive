@@ -37,7 +37,7 @@ test('relies on configured API key', () => {
 test('returns current token', ()=> {
    if (!isConfigured) { return; }
    expect(client.token).toBe(config.auth.token);
-})
+});
 
 test('creates Google client', () => {
    if (!isConfigured) { return; }
@@ -63,7 +63,7 @@ test('tests for expired access token', () => {
    if (!isConfigured) { return; }
    expect(client.accessTokenExpired).toBe(true);
    const later = new Date();
-   later.setDate(later.getDate() + 1)
+   later.setDate(later.getDate() + 1);
    config.auth.token.accessExpiration = later;
    expect(client.accessTokenExpired).toBe(false);
 });
