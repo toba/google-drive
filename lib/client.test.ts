@@ -1,3 +1,4 @@
+import { is } from '@toba/tools';
 import { Config as AuthConfig } from '@toba/oauth';
 import { GoogleDriveClient as Client, ClientConfig } from './client';
 
@@ -19,6 +20,11 @@ const config: ClientConfig = {
       }
    } as AuthConfig
 };
+
+const file = {
+   name: 'With Nick and Kayla on Mores Mountain.gpx',
+   id: null
+}
 
 let client: Client;
 let isConfigured = false;
@@ -54,30 +60,10 @@ test('genenerates authorization URL', () => {
    const url = client.authorizationURL;
    expect(url).toBeDefined();
    expect(/google/.test(url)).toBe(true);
-
-   //expect(url).toHaveProperty(authConfig.clientID);
-   // expect(url).toHaveProperty(config.domain);
 });
 
-test('tests for expired access token', () => {
-   if (!isConfigured) { return; }
-   expect(client.accessTokenExpired).toBe(true);
-   const later = new Date();
-   later.setDate(later.getDate() + 1);
-   config.auth.token.accessExpiration = later;
-   expect(client.accessTokenExpired).toBe(false);
-});
-
-test('refreshes access token', () => {
-   if (!isConfigured) { return; }
-   client.token.accessExpiration = null;
-   return client.verifyToken().then(() => {
-      expect(client.token.accessExpiration).toBeDefined();
-      expect(client.token.accessExpiration).toBeInstanceOf(Date);
-   });
-});
-
-test('retrieve `file content', () =>
-   client.fileWithName('Boiling Over.gpx').then(gpxText => {
-      expect(gpxText).toBeDefined();
+test('retrieve file content', () =>
+   client.readFileWithName(file.name).then(gpxText => {
+      expect(typeof gpxText).toBe(is.Type.String);
+      expect(gpxText.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
    }));
