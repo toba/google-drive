@@ -3,7 +3,7 @@ import {
    is,
    merge,
    Header,
-   Cache,
+   CompressCache,
    CachePolicy,
    HttpStatus,
    inferMimeType,
@@ -43,10 +43,6 @@ export interface ClientConfig extends BasicConfig {
    auth: AuthConfig;
 }
 
-export interface CacheFile {
-   name: string;
-}
-
 export enum EventType {
    RefreshTokenError,
    RefreshedAccessToken,
@@ -66,7 +62,7 @@ const defaultConfig: BasicConfig = {
 export class GoogleDriveClient {
    private config: ClientConfig;
    private oauth: OAuth2Client;
-   private cache: Cache<CacheFile>;
+   private cache: CompressCache;
    private _drive: GoogleDrive;
    events: EventEmitter<EventType, any>;
 
@@ -81,7 +77,7 @@ export class GoogleDriveClient {
       this.events = new EventEmitter<EventType, any>();
 
       if (this.config.useCache) {
-         this.cache = new Cache<CacheFile>({
+         this.cache = new CompressCache(this._readFileWithName.bind(this), {
             maxBytes: this.config.cacheSize
          });
       }
@@ -231,11 +227,17 @@ export class GoogleDriveClient {
    //       });
    //    }
 
+   async readFileWithName(fileName: string): Promise<string> {
+      return this.config.useCache
+         ? this.cache.getText(fileName)
+         : this._readFileWithName(fileName);
+   }
+
    /**
     * Find file with name by creating query and retrieving with ID of first
     * matching item.
     */
-   async readFileWithName(fileName: string): Promise<string> {
+   async _readFileWithName(fileName: string): Promise<string> {
       await this.ensureAccess();
 
       const params: ListFilesParams = {
@@ -249,7 +251,7 @@ export class GoogleDriveClient {
          //this.events.emit(EventType.FileNotFound, fileName);
          throw `File not found: “${fileName}”`;
       } else {
-         return this.readFileWithID(files[0].id); //, stream);
+         return this.readFileWithID(files[0].id);
       }
    }
 
