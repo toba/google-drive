@@ -8,6 +8,8 @@ import { GoogleDriveClient as Client, ClientConfig } from './client';
 const config: ClientConfig = {
    apiKey: process.env['GOOGLE_DRIVE_KEY'],
    folderID: '0B0lgcM9JCuSbMWluNjE4LVJtZWM',
+   useCache: false,
+   cacheSize: 0,
    auth: {
       clientID: process.env['GOOGLE_CLIENT_ID'],
       secret: process.env['GOOGLE_SECRET'],
