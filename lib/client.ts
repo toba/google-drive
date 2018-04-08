@@ -102,7 +102,7 @@ export class GoogleDriveClient {
     * @see https://developers.google.com/identity/protocols/OAuth2WebServer#refresh
     * @see https://github.com/google/google-auth-library-nodejs#manually-refreshing-access-token
     */
-   async ensureAccess() {
+   private async ensureAccess() {
       await this.oauth.getRequestMetadata();
       this.events.emit(EventType.RefreshedAccessToken);
    }
@@ -140,7 +140,10 @@ export class GoogleDriveClient {
     *
     * @see https://developers.google.com/apis-explorer/?hl=en_US#p/drive/v3/drive.files.get
     */
-   async getFileData<T>(params: GetFileParams, fileName: string = null) {
+   private async getFileData<T>(
+      params: GetFileParams,
+      fileName: string = null
+   ) {
       await this.ensureAccess();
       return new Promise<T>((resolve, reject) => {
          this.drive.files.get(
@@ -214,7 +217,7 @@ export class GoogleDriveClient {
     * Find file with name by creating query and retrieving with ID of first
     * matching item.
     */
-   async _readFileWithName(fileName: string): Promise<string> {
+   private async _readFileWithName(fileName: string): Promise<string> {
       await this.ensureAccess();
 
       const params: ListFilesParams = {
