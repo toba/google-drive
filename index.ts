@@ -1,1 +1,2 @@
-export { GoogleDriveClient, ClientConfig } from './lib/client';
+export { GoogleDriveClient } from './lib/client';
+export { ClientConfig as GoogleConfig } from './lib/config';

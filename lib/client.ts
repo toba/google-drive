@@ -1,25 +1,20 @@
-import * as Stream from 'stream';
+//import * as Stream from 'stream';
 import {
    is,
    merge,
-   Header,
    CompressCache,
-   CachePolicy,
    HttpStatus,
-   inferMimeType,
    EventEmitter
 } from '@toba/tools';
-import { Token, Config as AuthConfig } from '@toba/oauth';
+import { Token } from '@toba/oauth';
 import { google } from 'googleapis';
 import {
    GoogleDrive,
-   Scope,
    AccessType,
    AuthPrompt,
    GetFileResponse,
    GetFileListResponse,
    GenerateAuthUrlOpts,
-   RequestConfig,
    RequestError,
    DriveFile,
    ListFilesParams,
@@ -29,19 +24,7 @@ import {
 // google-auth-library is included by `googleapis` and only needed directly
 // for its type information
 import { OAuth2Client } from 'google-auth-library';
-
-export interface BasicConfig {
-   useCache: boolean;
-   /** Cache size in bytes */
-   cacheSize: number;
-   scope?: Scope | Scope[];
-}
-
-export interface ClientConfig extends BasicConfig {
-   apiKey: string;
-   folderID: string;
-   auth: AuthConfig;
-}
+import { defaultConfig, ClientConfig } from './config';
 
 export enum EventType {
    RefreshTokenError,
@@ -49,12 +32,6 @@ export enum EventType {
    FoundFile,
    FileNotFound
 }
-
-const defaultConfig: BasicConfig = {
-   cacheSize: 2048,
-   useCache: true,
-   scope: [Scope.DriveReadOnly, Scope.DriveMetadataReadOnly]
-};
 
 /**
  * http://google.github.io/google-api-nodejs-client/22.2.0/index.html
@@ -110,8 +87,8 @@ export class GoogleDriveClient {
    }
 
    /**
-    * http://google.github.io/google-api-nodejs-client/22.2.0/index.html#authorizing-and-authenticating
-    * https://github.com/google/google-auth-library-nodejs#oauth2-client
+    * @see http://google.github.io/google-api-nodejs-client/22.2.0/index.html#authorizing-and-authenticating
+    * @see https://github.com/google/google-auth-library-nodejs#oauth2-client
     */
    get authorizationURL(): string {
       return this.oauth.generateAuthUrl({
@@ -122,8 +99,8 @@ export class GoogleDriveClient {
    }
 
    /**
-    * https://developers.google.com/identity/protocols/OAuth2WebServer#refresh
-    * https://github.com/google/google-auth-library-nodejs#manually-refreshing-access-token
+    * @see https://developers.google.com/identity/protocols/OAuth2WebServer#refresh
+    * @see https://github.com/google/google-auth-library-nodejs#manually-refreshing-access-token
     */
    async ensureAccess() {
       await this.oauth.getRequestMetadata();
@@ -133,7 +110,7 @@ export class GoogleDriveClient {
    /**
     * List of files matching query parameter.
     *
-    * https://developers.google.com/drive/v3/web/search-parameters
+    * @see https://developers.google.com/drive/v3/web/search-parameters
     */
    async getFileList(params: ListFilesParams) {
       await this.ensureAccess();
@@ -161,7 +138,7 @@ export class GoogleDriveClient {
    /**
     * Get content of single file.
     *
-    * https://developers.google.com/apis-explorer/?hl=en_US#p/drive/v3/drive.files.get
+    * @see https://developers.google.com/apis-explorer/?hl=en_US#p/drive/v3/drive.files.get
     */
    async getFileData<T>(params: GetFileParams, fileName: string = null) {
       await this.ensureAccess();
@@ -259,7 +236,7 @@ export class GoogleDriveClient {
     * Download or stream file content. Note that Google downloader uses Request
     * module.
     *
-    * https://developers.google.com/drive/v3/web/manage-downloads
+    * @see https://developers.google.com/drive/v3/web/manage-downloads
     */
    async readFileWithID(
       fileId: string,
