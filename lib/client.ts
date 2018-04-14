@@ -21,8 +21,9 @@ import {
    GetFileParams,
    QuerySpace
 } from './types';
-// google-auth-library is included by `googleapis` and only needed directly
-// for its type information
+// `google-auth-library` is included by `googleapis` and only needed for its
+// type information. The version specified in local `package.json` must match
+// the version in `node_modules/googleapis/package.json`.
 import { OAuth2Client } from 'google-auth-library';
 import { defaultConfig, ClientConfig } from './config';
 
@@ -34,7 +35,8 @@ export enum EventType {
 }
 
 /**
- * http://google.github.io/google-api-nodejs-client/22.2.0/index.html
+ * @see http://google.github.io/google-api-nodejs-client/22.2.0/index.html
+ * @see https://github.com/google/google-api-nodejs-client/blob/master/samples/sampleclient.js#L35
  */
 export class GoogleDriveClient {
    private config: ClientConfig;
@@ -54,6 +56,7 @@ export class GoogleDriveClient {
       this.events = new EventEmitter<EventType, any>();
 
       if (this.config.useCache) {
+         // assign method that will load file content not found in cache
          this.cache = new CompressCache(this._readFileWithName.bind(this), {
             maxBytes: this.config.cacheSize
          });
@@ -121,14 +124,18 @@ export class GoogleDriveClient {
                if (is.value(err)) {
                   reject(err);
                } else if (res.status != HttpStatus.OK) {
-                  reject(`Server returned HTTP status ${res.status}`);
+                  reject(
+                     `Server returned HTTP status ${res.status} for [${
+                        params.q
+                     }]`
+                  );
                } else if (
                   is.defined(res, 'data') &&
                   is.defined(res.data, 'files')
                ) {
                   resolve(res.data.files);
                } else {
-                  reject('');
+                  reject(`No data returned for [${params.q}]`);
                }
             }
          );

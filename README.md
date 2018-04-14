@@ -8,5 +8,27 @@
 # Usage
 
 ```
-yarn add @toba/google-drive --dev
+yarn add @toba/google-drive
+```
+
+```ts
+const config: ClientConfig = {
+   apiKey: process.env['GOOGLE_DRIVE_KEY'],
+   folderID: 'some folder ID',
+   useCache: false,
+   cacheSize: 0,
+   auth: {
+      clientID: process.env['GOOGLE_CLIENT_ID'],
+      secret: process.env['GOOGLE_SECRET'],
+      callback: 'http://localhost/auth/google',
+      token: {
+         type: null,
+         access: process.env['GOOGLE_ACCESS_TOKEN'],
+         accessExpiration: null as Date,
+         refresh: process.env['GOOGLE_REFRESH_TOKEN']
+      }
+   } as AuthConfig
+};
+const client = new Client(config);
+const text = await client.readFileWithName('myfile.txt');
 ```
