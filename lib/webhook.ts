@@ -2,11 +2,9 @@ import * as http from 'http';
 import * as url from 'url';
 import * as net from 'net';
 import * as querystring from 'querystring';
+import { open } from '@toba/open';
 import { OAuth2Client } from 'google-auth-library';
 import { Scope, AccessType, AuthPrompt } from './types';
-import { ChildProcess } from 'child_process';
-/* tslint:disable-next-line:no-require-imports */
-import opn = require('opn');
 
 /**
  * Create temporary server to receive authorization callback.
@@ -56,10 +54,9 @@ export const receive = (
                connections.delete(key);
             });
          })
-         .listen(3000, () => {
+         .listen(3000, async () => {
             // open the browser to the authorize url to start the workflow
-            opn(authUrl, { wait: false }).then((cp: ChildProcess) =>
-               cp.unref()
-            );
+            const cp = await open(authUrl, { wait: false });
+            cp.unref();
          });
    });
