@@ -52,28 +52,40 @@
     flat "^4.0.0"
     logfmt "^1.2.0"
 
+"@toba/logger@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@toba/logger/-/logger-1.0.4.tgz#55c0f43dfb772de2fc3c3dda53b45baea802dc10"
+  dependencies:
+    "@toba/tools" "^1.19.0"
+    chalk "^2.3.0"
+    flat "^4.0.0"
+    logfmt "^1.2.0"
+
 "@toba/oauth@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@toba/oauth/-/oauth-1.2.0.tgz#bc20a9299511d96893c9c04b036fd296762ced22"
   dependencies:
     oauth "^0.9.15"
 
-"@toba/test@^1.10.0":
-  version "1.10.1"
-  resolved "https://registry.yarnpkg.com/@toba/test/-/test-1.10.1.tgz#46b4783f2ee81285083377dfa75712ac99227590"
+"@toba/open@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@toba/open/-/open-1.0.1.tgz#33339287cd1dadb98bcc97a2bd93b106864744a7"
+
+"@toba/test@^1.12.0":
+  version "1.12.8"
+  resolved "https://registry.yarnpkg.com/@toba/test/-/test-1.12.8.tgz#d7d401ec381af1a9f170866af95bcae3de401308"
   dependencies:
-    "@toba/logger" "^1.0.3"
-    "@toba/tools" "^1.18.0"
+    "@toba/logger" "^1.0.4"
+    "@toba/tools" "^1.20.0"
     "@types/jest" "^22.2.0"
     "@types/node" "^9.6.0"
-    "@types/node-fetch" "^1.6.7"
     jest "^22.4.0"
     jest-localstorage-mock "^2.2.0"
     ts-jest "^22.4.0"
 
-"@toba/tools@^1.18.0":
-  version "1.18.0"
-  resolved "https://registry.yarnpkg.com/@toba/tools/-/tools-1.18.0.tgz#9f729fd69e162149e73df4172f65ed7b1ade4f87"
+"@toba/tools@^1.19.0", "@toba/tools@^1.20.0":
+  version "1.20.0"
+  resolved "https://registry.yarnpkg.com/@toba/tools/-/tools-1.20.0.tgz#77f0c6b6c4443a42f5167ca1ce75426e3bbd7ad9"
   dependencies:
     zlib "^1.0.5"
 
@@ -87,13 +99,7 @@
   version "22.2.2"
   resolved "https://registry.yarnpkg.com/@types/jest/-/jest-22.2.2.tgz#afe5dacbd00d65325f52da0ed3e76e259629ac9d"
 
-"@types/node-fetch@^1.6.7":
-  version "1.6.7"
-  resolved "https://registry.yarnpkg.com/@types/node-fetch/-/node-fetch-1.6.7.tgz#521078e8f0c69a158e5022005aca92d2620f6d57"
-  dependencies:
-    "@types/node" "*"
-
-"@types/node@*", "@types/node@^9.6.0":
+"@types/node@^9.6.0":
   version "9.6.0"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-9.6.0.tgz#d3480ee666df9784b1001a1872a2f6ccefb6c2d7"
 
@@ -1541,25 +1547,13 @@ gonzales-pe@^4.2.3:
   dependencies:
     minimist "1.1.x"
 
-google-auth-library@^1.3.1:
+google-auth-library@1.3.2, google-auth-library@^1.3.1:
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/google-auth-library/-/google-auth-library-1.3.2.tgz#053d5cae7fb2b83367adad25bd0b8c80e2a38125"
   dependencies:
     axios "^0.18.0"
     gcp-metadata "^0.6.2"
     gtoken "^2.1.1"
-    jws "^3.1.4"
-    lodash.isstring "^4.0.1"
-    lru-cache "^4.1.2"
-    retry-axios "^0.3.2"
-
-google-auth-library@^1.4.0:
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/google-auth-library/-/google-auth-library-1.4.0.tgz#27dae3b6aceadcc115a9910b4f1ed27b68b1eb0b"
-  dependencies:
-    axios "^0.18.0"
-    gcp-metadata "^0.6.2"
-    gtoken "^2.2.0"
     jws "^3.1.4"
     lodash.isstring "^4.0.1"
     lru-cache "^4.1.2"
@@ -1593,16 +1587,6 @@ growly@^1.3.0:
 gtoken@^2.1.1:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/gtoken/-/gtoken-2.2.0.tgz#b9383199fb820113a3469bf0a207b03ca45a0363"
-  dependencies:
-    axios "^0.18.0"
-    google-p12-pem "^1.0.0"
-    jws "^3.1.4"
-    mime "^2.2.0"
-    pify "^3.0.0"
-
-gtoken@^2.2.0:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/gtoken/-/gtoken-2.3.0.tgz#4e0ffc16432d7041a1b3dbc1d97aac17a5dc964a"
   dependencies:
     axios "^0.18.0"
     google-p12-pem "^1.0.0"
@@ -3297,9 +3281,9 @@ preserve@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/preserve/-/preserve-0.2.0.tgz#815ed1f6ebc65926f865b310c0713bcb3315ce4b"
 
-prettier@^1.11.0:
-  version "1.11.1"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.11.1.tgz#61e43fc4cd44e68f2b0dfc2c38cd4bb0fccdcc75"
+prettier@^1.12.0:
+  version "1.12.0"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.12.0.tgz#d26fc5894b9230de97629b39cae225b503724ce8"
 
 pretty-format@^22.4.3:
   version "22.4.3"

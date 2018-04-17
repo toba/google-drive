@@ -74,8 +74,8 @@ test('Genenerates authorization URL', () => {
    expect(/google/.test(url)).toBe(true);
 });
 
-test('Retrieves file content', () =>
-   client.readFileWithName(file.name).then(gpxText => {
-      expect(typeof gpxText).toBe(is.Type.String);
-      expect(gpxText.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
-   }));
+test('Retrieves file content', async () => {
+   const gpxText = await client.readFileWithName(file.name);
+   expect(typeof gpxText).toBe(is.Type.String);
+   expect(gpxText.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
+});

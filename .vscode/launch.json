@@ -24,7 +24,7 @@
             "--runInBand",
             "client.test.ts",
             "--testNamePattern",
-            "retrieve file content"
+            "Retrieve file content"
          ],
          "cwd": "${workspaceRoot}"
       }
