@@ -24,7 +24,7 @@ const config: ClientConfig = {
 const file = {
    name: 'With Nick and Kayla on Mores Mountain.gpx',
    id: null
-}
+};
 
 let client: Client;
 let isConfigured = false;

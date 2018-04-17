@@ -1,14 +1,4 @@
-import * as Stream from 'stream';
-import {
-   is,
-   merge,
-   Header,
-   Cache,
-   CachePolicy,
-   HttpStatus,
-   inferMimeType,
-   EventEmitter
-} from '@toba/tools';
+import { is, merge, Cache, HttpStatus, EventEmitter } from '@toba/tools';
 import { Token, Config as AuthConfig } from '@toba/oauth';
 import { google } from 'googleapis';
 import {
@@ -19,7 +9,6 @@ import {
    GetFileResponse,
    GetFileListResponse,
    GenerateAuthUrlOpts,
-   RequestConfig,
    RequestError,
    DriveFile,
    ListFilesParams,
@@ -43,10 +32,6 @@ export interface ClientConfig extends BasicConfig {
    auth: AuthConfig;
 }
 
-export interface CacheFile {
-   name: string;
-}
-
 export enum EventType {
    RefreshTokenError,
    RefreshedAccessToken,
@@ -55,7 +40,7 @@ export enum EventType {
 }
 
 const defaultConfig: BasicConfig = {
-   cacheSize: 2048,
+   cacheSize: 10 * 1024,
    useCache: true,
    scope: [Scope.DriveReadOnly, Scope.DriveMetadataReadOnly]
 };
@@ -66,7 +51,7 @@ const defaultConfig: BasicConfig = {
 export class GoogleDriveClient {
    private config: ClientConfig;
    private oauth: OAuth2Client;
-   private cache: Cache<CacheFile>;
+   private cache: Cache<Buffer>;
    private _drive: GoogleDrive;
    events: EventEmitter<EventType, any>;
 
@@ -81,7 +66,7 @@ export class GoogleDriveClient {
       this.events = new EventEmitter<EventType, any>();
 
       if (this.config.useCache) {
-         this.cache = new Cache<CacheFile>({
+         this.cache = new Cache<Buffer>({
             maxBytes: this.config.cacheSize
          });
       }
@@ -192,50 +177,15 @@ export class GoogleDriveClient {
       });
    }
 
-   //    /**
-   //     * Send file content directly to writable stream.
-   //     */
-   //    streamFile(
-   //       params: GetFileParams,
-   //       stream: Stream.Writable,
-   //       fileName: string = null
-   //    ) {
-   //       return new Promise<any>((resolve, reject) => {
-   //          stream.on('finish', resolve);
-
-   //          this.drive.files
-   //             .get(params)
-   //             .on('error', (err: RequestError) => {
-   //                reject(err);
-   //             })
-   //             .on('end', () => {
-   //                this.events.emit(EventType.FoundFile, fileName);
-   //             })
-   //             .on('response', (res: any) => {
-   //                // response headers are piped directly to the stream so changes
-   //                // must happen here
-   //                let mimeType = 'application/octet-stream';
-
-   //                if (fileName === null) {
-   //                   fileName = new Date().toDateString();
-   //                } else {
-   //                   mimeType = inferMimeType(fileName);
-   //                }
-
-   //                res.headers[
-   //                   Header.Content.Disposition.toLowerCase()
-   //                ] = `attachment; filename=${fileName}`;
-   //                res.headers[Header.Content.Type.toLowerCase()] = mimeType;
-   //             })
-   //             .pipe(stream);
-   //       });
-   //    }
-
    /**
     * Find file with name by creating query and retrieving with ID of first
     * matching item.
     */
    async readFileWithName(fileName: string): Promise<string> {
+      if (this.config.useCache && this.cache.contains(fileName)) {
+         return this.cache.get(fileName);
+      }
+
       await this.ensureAccess();
 
       const params: ListFilesParams = {
@@ -246,10 +196,9 @@ export class GoogleDriveClient {
       const files = await this.getFileList(params);
 
       if (files.length == 0) {
-         //this.events.emit(EventType.FileNotFound, fileName);
          throw `File not found: “${fileName}”`;
       } else {
-         return this.readFileWithID(files[0].id); //, stream);
+         return this.readFileWithID(files[0].id);
       }
    }
 
@@ -259,11 +208,7 @@ export class GoogleDriveClient {
     *
     * https://developers.google.com/drive/v3/web/manage-downloads
     */
-   async readFileWithID(
-      fileId: string,
-      //stream?: Stream.Writable,
-      fileName: string = null
-   ) {
+   async readFileWithID(fileId: string, fileName: string = null) {
       await this.ensureAccess();
 
       const params: GetFileParams = {
@@ -272,10 +217,11 @@ export class GoogleDriveClient {
          timeout: 10000
       };
 
-      // if (is.value(stream)) {
-      //    return this.streamFile(params, stream, fileName);
-      // } else {
-      return this.getFileData<string>(params, fileName);
-      // }
+      const data = await this.getFileData<string>(params, fileName);
+
+      if (this.config.useCache && fileName != null) {
+         this.cache.add(fileName, data);
+      }
+      return data;
    }
 }
