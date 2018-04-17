@@ -1,9 +1,14 @@
-import { is, merge, Cache, HttpStatus, EventEmitter } from '@toba/tools';
-import { Token, Config as AuthConfig } from '@toba/oauth';
+//import * as Stream from 'stream';
+import {
+   is,
+   merge,
+   HttpStatus,
+   EventEmitter
+} from '@toba/tools';
+import { Token } from '@toba/oauth';
 import { google } from 'googleapis';
 import {
    GoogleDrive,
-   Scope,
    AccessType,
    AuthPrompt,
    GetFileResponse,
@@ -18,19 +23,7 @@ import {
 // google-auth-library is included by `googleapis` and only needed directly
 // for its type information
 import { OAuth2Client } from 'google-auth-library';
-
-export interface BasicConfig {
-   useCache: boolean;
-   /** Cache size in bytes */
-   cacheSize: number;
-   scope?: Scope | Scope[];
-}
-
-export interface ClientConfig extends BasicConfig {
-   apiKey: string;
-   folderID: string;
-   auth: AuthConfig;
-}
+import { defaultConfig, ClientConfig } from './config';
 
 export enum EventType {
    RefreshTokenError,
@@ -39,19 +32,13 @@ export enum EventType {
    FileNotFound
 }
 
-const defaultConfig: BasicConfig = {
-   cacheSize: 10 * 1024,
-   useCache: true,
-   scope: [Scope.DriveReadOnly, Scope.DriveMetadataReadOnly]
-};
-
 /**
  * http://google.github.io/google-api-nodejs-client/22.2.0/index.html
  */
 export class GoogleDriveClient {
    private config: ClientConfig;
    private oauth: OAuth2Client;
-   private cache: Cache<Buffer>;
+   private cache: CompressCache;
    private _drive: GoogleDrive;
    events: EventEmitter<EventType, any>;
 
@@ -66,7 +53,7 @@ export class GoogleDriveClient {
       this.events = new EventEmitter<EventType, any>();
 
       if (this.config.useCache) {
-         this.cache = new Cache<Buffer>({
+         this.cache = new CompressCache(this._readFileWithName.bind(this), {
             maxBytes: this.config.cacheSize
          });
       }
@@ -99,8 +86,8 @@ export class GoogleDriveClient {
    }
 
    /**
-    * http://google.github.io/google-api-nodejs-client/22.2.0/index.html#authorizing-and-authenticating
-    * https://github.com/google/google-auth-library-nodejs#oauth2-client
+    * @see http://google.github.io/google-api-nodejs-client/22.2.0/index.html#authorizing-and-authenticating
+    * @see https://github.com/google/google-auth-library-nodejs#oauth2-client
     */
    get authorizationURL(): string {
       return this.oauth.generateAuthUrl({
@@ -111,10 +98,10 @@ export class GoogleDriveClient {
    }
 
    /**
-    * https://developers.google.com/identity/protocols/OAuth2WebServer#refresh
-    * https://github.com/google/google-auth-library-nodejs#manually-refreshing-access-token
+    * @see https://developers.google.com/identity/protocols/OAuth2WebServer#refresh
+    * @see https://github.com/google/google-auth-library-nodejs#manually-refreshing-access-token
     */
-   async ensureAccess() {
+   private async ensureAccess() {
       await this.oauth.getRequestMetadata();
       this.events.emit(EventType.RefreshedAccessToken);
    }
@@ -122,7 +109,7 @@ export class GoogleDriveClient {
    /**
     * List of files matching query parameter.
     *
-    * https://developers.google.com/drive/v3/web/search-parameters
+    * @see https://developers.google.com/drive/v3/web/search-parameters
     */
    async getFileList(params: ListFilesParams) {
       await this.ensureAccess();
@@ -150,9 +137,12 @@ export class GoogleDriveClient {
    /**
     * Get content of single file.
     *
-    * https://developers.google.com/apis-explorer/?hl=en_US#p/drive/v3/drive.files.get
+    * @see https://developers.google.com/apis-explorer/?hl=en_US#p/drive/v3/drive.files.get
     */
-   async getFileData<T>(params: GetFileParams, fileName: string = null) {
+   private async getFileData<T>(
+      params: GetFileParams,
+      fileName: string = null
+   ) {
       await this.ensureAccess();
       return new Promise<T>((resolve, reject) => {
          this.drive.files.get(
@@ -177,15 +167,56 @@ export class GoogleDriveClient {
       });
    }
 
+   //    /**
+   //     * Send file content directly to writable stream.
+   //     */
+   //    streamFile(
+   //       params: GetFileParams,
+   //       stream: Stream.Writable,
+   //       fileName: string = null
+   //    ) {
+   //       return new Promise<any>((resolve, reject) => {
+   //          stream.on('finish', resolve);
+
+   //          this.drive.files
+   //             .get(params)
+   //             .on('error', (err: RequestError) => {
+   //                reject(err);
+   //             })
+   //             .on('end', () => {
+   //                this.events.emit(EventType.FoundFile, fileName);
+   //             })
+   //             .on('response', (res: any) => {
+   //                // response headers are piped directly to the stream so changes
+   //                // must happen here
+   //                let mimeType = 'application/octet-stream';
+
+   //                if (fileName === null) {
+   //                   fileName = new Date().toDateString();
+   //                } else {
+   //                   mimeType = inferMimeType(fileName);
+   //                }
+
+   //                res.headers[
+   //                   Header.Content.Disposition.toLowerCase()
+   //                ] = `attachment; filename=${fileName}`;
+   //                res.headers[Header.Content.Type.toLowerCase()] = mimeType;
+   //             })
+   //             .pipe(stream);
+   //       });
+   //    }
+
+   async readFileWithName(fileName: string): Promise<string> {
+      return this.config.useCache
+         ? this.cache.getText(fileName)
+         : this._readFileWithName(fileName);
+   }
+
    /**
     * Find file with name by creating query and retrieving with ID of first
     * matching item.
     */
-   async readFileWithName(fileName: string): Promise<string> {
-      if (this.config.useCache && this.cache.contains(fileName)) {
-         return this.cache.get(fileName);
-      }
-
+   private async _readFileWithName(fileName: string): Promise<string> {
       await this.ensureAccess();
 
       const params: ListFilesParams = {
@@ -206,7 +237,7 @@ export class GoogleDriveClient {
     * Download or stream file content. Note that Google downloader uses Request
     * module.
     *
-    * https://developers.google.com/drive/v3/web/manage-downloads
+    * @see https://developers.google.com/drive/v3/web/manage-downloads
     */
    async readFileWithID(fileId: string, fileName: string = null) {
       await this.ensureAccess();

@@ -52,7 +52,7 @@ export interface GetFileResponse<T> extends AxiosResponse<T> {}
 /**
  * Google access scopes.
  *
- * https://developers.google.com/drive/web/scopes
+ * @see https://developers.google.com/drive/web/scopes
  */
 export enum Scope {
    DriveReadWrite = 'https://www.googleapis.com/auth/drive',
@@ -64,7 +64,7 @@ export enum Scope {
 }
 
 /**
- * https://github.com/google/oauth2client/issues/453
+ * @see https://github.com/google/oauth2client/issues/453
  */
 export enum AuthPrompt {
    None = 'none',
@@ -75,7 +75,7 @@ export enum AuthPrompt {
 /**
  * Copied from source because it isn't exported in npm package.
  *
- * https://github.com/google/google-auth-library-nodejs/blob/master/src/auth/oauth2client.ts#L39
+ * @see https://github.com/google/google-auth-library-nodejs/blob/master/src/auth/oauth2client.ts#L39
  */
 export interface GenerateAuthUrlOpts {
    /**
@@ -206,7 +206,7 @@ export enum QuerySpace {
 }
 
 /**
- * https://github.com/google/google-api-nodejs-client/blob/master/src/lib/api.ts
+ * @see https://github.com/google/google-api-nodejs-client/blob/master/src/lib/api.ts
  */
 export interface GoogleDrive {
    constructor(options?: GlobalOptions): GoogleDrive;
@@ -216,7 +216,7 @@ export interface GoogleDrive {
     */
    files: {
       /**
-       * https://github.com/google/google-api-nodejs-client/blob/master/src/apis/drive/v3.ts#L684
+       * @see https://github.com/google/google-api-nodejs-client/blob/master/src/apis/drive/v3.ts#L684
        */
       get(
          params: GetFileParams,
@@ -225,7 +225,7 @@ export interface GoogleDrive {
       ): EventEmitter;
 
       /**
-       * https://github.com/google/google-api-nodejs-client/blob/master/src/apis/drive/v3.ts#L727
+       * @see https://github.com/google/google-api-nodejs-client/blob/master/src/apis/drive/v3.ts#L727
        */
       list(
          params: ListFilesParams,
@@ -257,7 +257,7 @@ export interface ListFilesParams {
     * A query for filtering the file results. See the "Search for Files" guide
     * for supported syntax.
     *
-    * https://developers.google.com/drive/v3/web/search-parameters
+    * @see https://developers.google.com/drive/v3/web/search-parameters
     */
    q: string;
 

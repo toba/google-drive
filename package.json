@@ -1,6 +1,6 @@
 {
    "name": "@toba/google-drive",
-   "version": "1.0.0",
+   "version": "1.2.1",
    "description": "Toba Google Drive module",
    "private": false,
    "author": {
@@ -14,17 +14,13 @@
    "scripts": {
       "test": "jest --coverage"
    },
-   "files": [
-      "index.ts",
-      "lib/client.ts",
-      "lib/types.ts"
-   ],
+   "files": ["index.ts", "lib/config.ts", "lib/client.ts", "lib/types.ts"],
    "devDependencies": {
-      "@toba/lint": "^1.3.3",
-      "@toba/test": "^1.6.0",
-      "@types/node": "^9.4.6",
+      "@toba/build": "^1.4.0",
+      "@toba/test": "^1.10.0",
+      "@types/node": "^9.6.0",
       "prettier": "^1.11.0",
-      "typescript": "^2.7.0"
+      "typescript": "^2.8.0"
    },
    "repository": {
       "type": "git",
@@ -38,9 +34,10 @@
       "tabWidth": 3
    },
    "dependencies": {
-      "@toba/oauth": "^1.1.6",
-      "@toba/tools": "^1.10.0",
-      "google-auth-library": "^1.3.1",
-      "googleapis": "^27.0.0"
+      "@toba/logger": "^1.0.3",
+      "@toba/oauth": "^1.2.0",
+      "@toba/tools": "^1.18.0",
+      "google-auth-library": "^1.4.0",
+      "googleapis": "^28.0.0"
    }
 }
