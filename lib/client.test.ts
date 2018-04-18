@@ -1,54 +1,27 @@
 import '@toba/test';
 import { is } from '@toba/tools';
-import { Config as AuthConfig } from '@toba/oauth';
 import { GoogleDriveClient as Client } from './client';
-import { ClientConfig } from './config';
-
-/**
- * http://code.google.com/apis/console/#project:1033232213688
- */
-const config: ClientConfig = {
-   apiKey: process.env['GOOGLE_DRIVE_KEY'],
-   folderID: '0B0lgcM9JCuSbMWluNjE4LVJtZWM',
-   useCache: false,
-   cacheSize: 0,
-   auth: {
-      clientID: process.env['GOOGLE_CLIENT_ID'],
-      secret: process.env['GOOGLE_SECRET'],
-      callback: 'http://localhost/auth/google',
-      token: {
-         type: null,
-         access: process.env['GOOGLE_ACCESS_TOKEN'],
-         accessExpiration: null as Date,
-         refresh: process.env['GOOGLE_REFRESH_TOKEN']
-      }
-   } as AuthConfig
-};
-
-const file = {
-   name: 'With Nick and Kayla on Mores Mountain.gpx',
-   id: null
-};
+import { testConfig, testFile } from './.test-data';
 
 let client: Client;
 let isConfigured = false;
 
 beforeAll(() => {
-   isConfigured = config.apiKey !== undefined;
+   isConfigured = testConfig.apiKey !== undefined;
    if (isConfigured) {
-      client = new Client(config);
+      client = new Client(testConfig);
    }
 });
 
 test('Relies on configured API key', () => {
-   expect(config.apiKey).toBeDefined();
+   expect(testConfig.apiKey).toBeDefined();
 });
 
 test('Returns current token', () => {
    if (!isConfigured) {
       return;
    }
-   expect(client.token).toBe(config.auth.token);
+   expect(client.token).toBe(testConfig.auth.token);
 });
 
 test('Creates Google client', () => {
@@ -75,7 +48,7 @@ test('Genenerates authorization URL', () => {
 });
 
 test('Retrieves file content', async () => {
-   const gpxText = await client.readFileWithName(file.name);
+   const gpxText = await client.readFileWithName(testFile.name);
    expect(typeof gpxText).toBe(is.Type.String);
    expect(gpxText.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
 });
