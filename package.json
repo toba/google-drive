@@ -1,6 +1,6 @@
 {
    "name": "@toba/google-drive",
-   "version": "1.2.3",
+   "version": "1.2.4",
    "description": "Toba Google Drive module",
    "private": false,
    "author": {
@@ -14,7 +14,11 @@
    "scripts": {
       "test": "jest --coverage"
    },
-   "files": ["index.ts", "lib/config.ts", "lib/client.ts", "lib/types.ts"],
+   "main": "dist/index.js",
+   "types:": "dist/index.d.ts",
+   "files": [
+      "dist/**/*"
+   ],
    "//": "lock google-auth-library to the same version imported by googleapis",
    "devDependencies": {
       "@toba/build": "^1.5.0",
