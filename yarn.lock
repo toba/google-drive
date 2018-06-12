@@ -45,8 +45,8 @@
   resolved "https://registry.yarnpkg.com/@nodelib/fs.stat/-/fs.stat-1.1.0.tgz#50c1e2260ac0ed9439a181de3725a0168d59c48a"
 
 "@toba/build@^1.5.0":
-  version "1.7.0"
-  resolved "https://registry.yarnpkg.com/@toba/build/-/build-1.7.0.tgz#0d2a4eac97c1538502d7b5654f46c171198d599e"
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/@toba/build/-/build-1.7.1.tgz#da7ad0bd5c66d98aa8a7b5809949c58401867d8f"
   dependencies:
     stylelint "^9.2.0"
     stylelint-config-standard "^18.2.0"
@@ -56,8 +56,8 @@
     tslint-consistent-codestyle "^1.13.0"
 
 "@toba/logger@^1.0.3", "@toba/logger@^1.0.4":
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/@toba/logger/-/logger-1.0.7.tgz#3456876a8f876d1d10f8bb98d4eb9f4fd059c693"
+  version "1.0.9"
+  resolved "https://registry.yarnpkg.com/@toba/logger/-/logger-1.0.9.tgz#035758df52f90235e94c5be4db2f0a003441ad81"
   dependencies:
     "@toba/tools" "^3.0.0"
     chalk "^2.4.0"
@@ -71,8 +71,8 @@
     oauth "^0.9.15"
 
 "@toba/test@^1.13.0":
-  version "1.16.0"
-  resolved "https://registry.yarnpkg.com/@toba/test/-/test-1.16.0.tgz#0654d88b74e3c39a17d9097a5f15c3db987242cc"
+  version "1.16.2"
+  resolved "https://registry.yarnpkg.com/@toba/test/-/test-1.16.2.tgz#1de34bec03a42e20d00b9b2a7bc11e898754fa1a"
   dependencies:
     "@toba/logger" "^1.0.4"
     "@toba/tools" "^3.2.0"

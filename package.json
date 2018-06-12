@@ -1,6 +1,6 @@
 {
    "name": "@toba/google-drive",
-   "version": "1.2.4",
+   "version": "1.2.5",
    "description": "Toba Google Drive module",
    "private": false,
    "author": {
@@ -12,6 +12,7 @@
       "access": "public"
    },
    "scripts": {
+      "prepublishOnly": "./node_modules/.bin/tsc",
       "test": "jest --coverage"
    },
    "main": "dist/index.js",
