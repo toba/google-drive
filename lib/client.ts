@@ -1,4 +1,3 @@
-//import * as Stream from 'stream';
 import {
    is,
    merge,
@@ -7,7 +6,7 @@ import {
    CompressCache
 } from '@toba/tools';
 import { Token } from '@toba/oauth';
-import { google } from 'googleapis';
+import { google, drive_v3 } from 'googleapis';
 import {
    AccessType,
    AuthPrompt,
@@ -34,14 +33,14 @@ export enum EventType {
 }
 
 /**
- * @see http://google.github.io/google-api-nodejs-client/22.2.0/index.html
+ * @see http://google.github.io/google-api-nodejs-client/
  * @see https://github.com/google/google-api-nodejs-client/blob/master/samples/sampleclient.js#L35
  */
 export class GoogleDriveClient {
    private config: ClientConfig;
    private oauth: OAuth2Client;
    private cache: CompressCache;
-   private _drive: Google.Drive;
+   private _drive: drive_v3.Drive;
    events: EventEmitter<EventType, any>;
 
    constructor(config: ClientConfig) {
@@ -74,7 +73,7 @@ export class GoogleDriveClient {
    /**
     * Google's own drive client.
     */
-   get drive() {
+   get drive(): drive_v3.Drive {
       if (this._drive === null) {
          this._drive = google.drive('v3');
       }

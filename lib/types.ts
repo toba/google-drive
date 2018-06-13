@@ -1,16 +1,6 @@
-//import { BodyResponseCallback } from 'google-auth-library/build/src/transporters';
-//import { GlobalOptions } from 'googleapis/build/src/shared/src/api';
 import { AxiosResponse } from 'axios';
 import { MimeType } from '@toba/tools';
-//import { OAuth2Client } from 'google-auth-library';
-//import { EventEmitter } from 'events';
-
-//AxiosRequestConfig as RequestConfig
 export { AxiosError as RequestError } from 'axios';
-
-// export {
-//    APIRequestMethodParams as RequestConfig
-// } from 'googleapis/build/src/lib/api';
 
 export enum AccessType {
    Offline = 'offline',
@@ -36,7 +26,7 @@ export interface DriveFile extends DriveItem {
 }
 
 /**
- * https://developers.google.com/apis-explorer/?hl=en_US#p/drive/v3/drive.files.list
+ * @see https://developers.google.com/apis-explorer/?hl=en_US#p/drive/v3/drive.files.list
  */
 export interface DriveFileList extends DriveItem {
    imcompleteSearch: boolean;
