@@ -1,19 +1,16 @@
-import { BodyResponseCallback } from 'google-auth-library/build/src/transporters';
-import {
-   GlobalOptions,
-   APIRequestMethodParams as RequestConfig
-} from 'googleapis/build/src/lib/api';
+//import { BodyResponseCallback } from 'google-auth-library/build/src/transporters';
+//import { GlobalOptions } from 'googleapis/build/src/shared/src/api';
 import { AxiosResponse } from 'axios';
 import { MimeType } from '@toba/tools';
 //import { OAuth2Client } from 'google-auth-library';
-import { EventEmitter } from 'events';
+//import { EventEmitter } from 'events';
 
 //AxiosRequestConfig as RequestConfig
 export { AxiosError as RequestError } from 'axios';
 
-export {
-   APIRequestMethodParams as RequestConfig
-} from 'googleapis/build/src/lib/api';
+// export {
+//    APIRequestMethodParams as RequestConfig
+// } from 'googleapis/build/src/lib/api';
 
 export enum AccessType {
    Offline = 'offline',
@@ -204,38 +201,6 @@ export enum QuerySpace {
    Photos = 'photos',
    AppDataFolder = 'appDataFolder'
 }
-
-/**
- * @see https://github.com/google/google-api-nodejs-client/blob/master/src/lib/api.ts
- */
-export interface GoogleDrive {
-   constructor(options?: GlobalOptions): GoogleDrive;
-
-   /**
-    * Interact with file objects.
-    */
-   files: {
-      /**
-       * @see https://github.com/google/google-api-nodejs-client/blob/master/src/apis/drive/v3.ts#L684
-       */
-      get(
-         params: GetFileParams,
-         config: RequestConfig | FileCallback,
-         callback?: FileCallback
-      ): EventEmitter;
-
-      /**
-       * @see https://github.com/google/google-api-nodejs-client/blob/master/src/apis/drive/v3.ts#L727
-       */
-      list(
-         params: ListFilesParams,
-         config: RequestConfig | FileCallback,
-         callback?: FileCallback
-      ): void;
-   };
-}
-
-type FileCallback = BodyResponseCallback<any>;
 
 export interface GetFileParams {
    fileId: string;

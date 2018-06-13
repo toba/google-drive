@@ -9,7 +9,6 @@ import {
 import { Token } from '@toba/oauth';
 import { google } from 'googleapis';
 import {
-   GoogleDrive,
    AccessType,
    AuthPrompt,
    GetFileResponse,
@@ -42,7 +41,7 @@ export class GoogleDriveClient {
    private config: ClientConfig;
    private oauth: OAuth2Client;
    private cache: CompressCache;
-   private _drive: GoogleDrive;
+   private _drive: Google.Drive;
    events: EventEmitter<EventType, any>;
 
    constructor(config: ClientConfig) {
@@ -77,7 +76,7 @@ export class GoogleDriveClient {
     */
    get drive() {
       if (this._drive === null) {
-         this._drive = google.drive('v3') as GoogleDrive;
+         this._drive = google.drive('v3');
       }
       return this._drive;
    }
@@ -259,7 +258,7 @@ export class GoogleDriveClient {
       const data = await this.getFileData<string>(params, fileName);
 
       if (this.config.useCache && fileName != null) {
-         this.cache.add(fileName, data);
+         this.cache.addText(fileName, data);
       }
       return data;
    }
