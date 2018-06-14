@@ -1,6 +1,6 @@
 {
    "name": "@toba/google-drive",
-   "version": "1.2.5",
+   "version": "1.2.6",
    "description": "Toba Google Drive module",
    "private": false,
    "author": {
