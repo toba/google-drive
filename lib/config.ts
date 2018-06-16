@@ -1,14 +1,15 @@
-import { Config as AuthConfig } from '@toba/oauth';
+import { AuthConfig } from '@toba/oauth';
 import { Scope } from './types';
 
 export interface BasicConfig {
+   /** Whether to cache file content in memory. */
    useCache: boolean;
    /** Cache size in bytes */
    cacheSize: number;
    scope?: Scope | Scope[];
 }
 
-export interface ClientConfig extends BasicConfig {
+export interface GoogleConfig extends BasicConfig {
    apiKey: string;
    folderID: string;
    auth: AuthConfig;

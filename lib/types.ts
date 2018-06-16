@@ -2,15 +2,65 @@ import { AxiosResponse } from 'axios';
 import { MimeType } from '@toba/tools';
 export { AxiosError as RequestError } from 'axios';
 
+/**
+ * Indicates whether your application can refresh access tokens when the user is
+ * not present at the browser. Valid parameter values are `online`, which is the
+ * default value, and 'offline'.
+ */
 export enum AccessType {
+   /**
+    * Use if your application needs to refresh access tokens when the user is
+    * not present at the browser. This value instructs the Google authorization
+    * server to return a refresh token and an access token the first time that
+    * your application exchanges an authorization code for tokens.
+    */
    Offline = 'offline',
-   /** Gets refresh token */
    Online = 'online'
 }
 
+export enum ResponseType {
+   /** Indicate response should be streamed. */
+   Stream = 'stream',
+   Code = 'CODE'
+}
+
+export enum ResponseAlt {
+   /**
+    * Use when downloading files.
+    * @see https://developers.google.com/drive/api/v3/manage-downloads#using_altmedia
+    */
+   Media = 'media'
+}
+
+/**
+ * Specifies what method was used to encode a `code_verifier` that will be used
+ * during authorization code exchange. This parameter must be used with the
+ * `code_challenge` parameter. The value of the `code_challenge_method`
+ * defaults to "plain" if not present in the request that includes a
+ * `code_challenge`.
+ */
 export enum CodeChallengeMethod {
    Plain = 'plain',
    S256 = 'S256'
+}
+
+/**
+ * A space-delimited, case-sensitive list of prompts to present the user. If you
+ * don't specify this parameter, the user will be prompted only the first time
+ * your app requests access.
+ *
+ * @see https://github.com/google/oauth2client/issues/453
+ */
+export enum AuthPrompt {
+   /**
+    * Do not display any authentication or consent screens. Must not be
+    * specified with other values.
+    */
+   None = 'none',
+   /** Prompt the user for consent. */
+   Consent = 'consent',
+   /** Prompt the user to select an account. */
+   SelectAccount = 'select_account'
 }
 
 export interface DriveRequest {}
@@ -37,7 +87,12 @@ export interface GetFileListResponse extends AxiosResponse<DriveFileList> {}
 export interface GetFileResponse<T> extends AxiosResponse<T> {}
 
 /**
- * Google access scopes.
+ * Google access scopes. These values inform the consent screen that Google
+ * displays to the user. Scopes enable your application to only request access
+ * to the resources that it needs while also enabling users to control the
+ * amount of access that they grant to your application. Thus, there is an
+ * inverse relationship between the number of scopes requested and the
+ * likelihood of obtaining user consent.
  *
  * @see https://developers.google.com/drive/web/scopes
  */
@@ -51,35 +106,16 @@ export enum Scope {
 }
 
 /**
- * @see https://github.com/google/oauth2client/issues/453
- */
-export enum AuthPrompt {
-   None = 'none',
-   Consent = 'consent',
-   SelectAccount = 'select_account'
-}
-
-/**
  * Copied from source because it isn't exported in npm package.
  *
  * @see https://github.com/google/google-auth-library-nodejs/blob/master/src/auth/oauth2client.ts#L39
  */
 export interface GenerateAuthUrlOpts {
-   /**
-    * Recommended. Indicates whether your application can refresh access tokens
-    * when the user is not present at the browser. Valid parameter values are
-    * 'online', which is the default value, and 'offline'. Set the value to
-    * 'offline' if your application needs to refresh access tokens when the user
-    * is not present at the browser. This value instructs the Google
-    * authorization server to return a refresh token and an access token the
-    * first time that your application exchanges an authorization code for
-    * tokens.
-    */
    access_type?: AccessType;
    /**
-    * The 'response_type' will always be set to 'CODE'.
+    * Defaults to `CODE`.
     */
-   response_type?: string;
+   response_type?: ResponseType;
    /**
     * The client ID for your application. The value passed into the constructor
     * will be used if not provided. You can find this value in the API Console.
@@ -93,21 +129,6 @@ export interface GenerateAuthUrlOpts {
     * The value passed into the constructor will be used if not provided.
     */
    redirect_uri?: string;
-   /**
-    * Required. A space-delimited list of scopes that identify the resources that
-    * your application could access on the user's behalf. These values inform the
-    * consent screen that Google displays to the user. Scopes enable your
-    * application to only request access to the resources that it needs while
-    * also enabling users to control the amount of access that they grant to your
-    * application. Thus, there is an inverse relationship between the number of
-    * scopes requested and the likelihood of obtaining user consent. The
-    * OAuth 2.0 API Scopes document provides a full list of scopes that you might
-    * use to access Google APIs. We recommend that your application request
-    * access to authorization scopes in context whenever possible. By requesting
-    * access to user data in context, via incremental authorization, you help
-    * users to more easily understand why your application needs the access it is
-    * requesting.
-    */
    scope?: Scope[] | Scope;
    /**
     * Recommended. Specifies any string value that your application uses to
@@ -144,30 +165,12 @@ export interface GenerateAuthUrlOpts {
     * address or sub identifier, which is equivalent to the user's Google ID.
     */
    login_hint?: string;
-   /**
-    * Optional. A space-delimited, case-sensitive list of prompts to present the
-    * user. If you don't specify this parameter, the user will be prompted only
-    * the first time your app requests access.  Possible values are:
-    *
-    * 'none' - Do not display any authentication or consent screens. Must not be
-    *          specified with other values.
-    * 'consent' - rompt the user for consent.
-    * 'select_account' - Prompt the user to select an account.
-    */
-   prompt?: string;
-   /**
-    * Recommended. Specifies what method was used to encode a 'code_verifier'
-    * that will be used during authorization code exchange. This parameter must
-    * be used with the 'code_challenge' parameter. The value of the
-    * 'code_challenge_method' defaults to "plain" if not present in the request
-    * that includes a 'code_challenge'. The only supported values for this
-    * parameter are "S256" or "plain".
-    */
+   prompt?: AuthPrompt;
    code_challenge_method?: CodeChallengeMethod;
    /**
-    * Recommended. Specifies an encoded 'code_verifier' that will be used as a
+    * Recommended. Specifies an encoded `code_verifier` that will be used as a
     * server-side challenge during authorization code exchange. This parameter
-    * must be used with the 'code_challenge' parameter described above.
+    * must be used with the `code_challenge` parameter described above.
     */
    code_challenge?: string;
 }
@@ -186,10 +189,27 @@ export enum SortBy {
    ViewedByMeTime = 'viewedByMeTime'
 }
 
+/**
+ * Scope of file query in terms of item type.
+ */
 export enum QuerySpace {
    Drive = 'drive',
    Photos = 'photos',
    AppDataFolder = 'appDataFolder'
+}
+
+/**
+ * Scope of file query in terms of owner.
+ */
+export enum Corpora {
+   User = 'user',
+   Domain = 'domain',
+   TeamDrive = 'teamDrive',
+   /**
+    * Must be combined with `User`; all other values must be used in isolation.
+    * Prefer `User` or `TeamDrive` to `AllTeamDrives` for efficiency.
+    */
+   AllTeamDrives = 'allTeamDrives,user'
 }
 
 export interface GetFileParams {
@@ -203,7 +223,10 @@ export interface GetFileParams {
     * Whether the requesting application supports Team Drives.
     */
    supportsTeamDrives?: boolean;
-   alt?: string;
+   /**
+    * Set to `media` to download.
+    */
+   alt?: ResponseAlt;
    timeout?: number;
 }
 
@@ -216,14 +239,7 @@ export interface ListFilesParams {
     */
    q: string;
 
-   /**
-    * Comma-separated list of bodies of items (files/documents) to which the
-    * query applies. Supported bodies are 'user', 'domain', 'teamDrive' and
-    * 'allTeamDrives'. 'allTeamDrives' must be combined with 'user'; all other
-    * values must be used in isolation. Prefer 'user' or 'teamDrive' to
-    * 'allTeamDrives' for efficiency.
-    */
-   corpora?: string;
+   corpora?: Corpora;
 
    /**
     * Whether Team Drive items should be included in results.

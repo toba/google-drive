@@ -1,10 +1,10 @@
-import { ClientConfig } from './config';
-import { Config as AuthConfig } from '@toba/oauth';
+import { GoogleConfig } from './config';
+import { AuthConfig } from '@toba/oauth';
 
 /**
- * http://code.google.com/apis/console/#project:1033232213688
+ * @see http://code.google.com/apis/console/#project:1033232213688
  */
-export const testConfig: ClientConfig = {
+export const testConfig: GoogleConfig = {
    apiKey: process.env['GOOGLE_DRIVE_KEY'],
    folderID: '0B0lgcM9JCuSbMWluNjE4LVJtZWM',
    useCache: false,

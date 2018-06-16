@@ -1,4 +1,5 @@
 import '@toba/test';
+import { MemoryStream } from '@toba/test';
 import { is } from '@toba/tools';
 import { GoogleDriveClient as Client } from './client';
 import { testConfig, testFile } from './.test-data';
@@ -13,32 +14,32 @@ beforeAll(() => {
    }
 });
 
-test('Relies on configured API key', () => {
+test('relies on configured API key', () => {
    expect(testConfig.apiKey).toBeDefined();
 });
 
-test('Returns current token', () => {
+test('returns current token', () => {
    if (!isConfigured) {
       return;
    }
    expect(client.token).toBe(testConfig.auth.token);
 });
 
-test('Creates Google client', () => {
+test('creates Google client', () => {
    if (!isConfigured) {
       return;
    }
    expect(client).toBeDefined();
 });
 
-test('Creates Drive client', () => {
+test('creates Drive client', () => {
    if (!isConfigured) {
       return;
    }
    expect(client.drive).toBeDefined();
 });
 
-test('Genenerates authorization URL', () => {
+test('genenerates authorization URL', () => {
    if (!isConfigured) {
       return;
    }
@@ -47,8 +48,20 @@ test('Genenerates authorization URL', () => {
    expect(/google/.test(url)).toBe(true);
 });
 
-test('Retrieves file content', async () => {
+test('retrieves file content', async () => {
+   if (!isConfigured) {
+      return;
+   }
    const gpxText = await client.readFileWithName(testFile.name);
    expect(typeof gpxText).toBe(is.Type.String);
    expect(gpxText.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
+});
+
+test('streams file content', async () => {
+   if (!isConfigured) {
+      return;
+   }
+   const stream = new MemoryStream();
+   await client.readFileWithName(testFile.name, stream);
+   expect(stream.text.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
 });
