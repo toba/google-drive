@@ -107,8 +107,16 @@ export class GoogleDriveClient {
       } as GenerateAuthUrlOpts);
    }
 
-   getAccessToken() {
-      return this.oauth.getAccessToken();
+   /**
+    * @param code Authorization code returned by initial authorization URL
+    */
+   async getAccessToken(code: string): Promise<Token> {
+      const res = await this.oauth.getToken(code);
+      return {
+         access: res.tokens.access_token,
+         accessExpiration: new Date(res.tokens.expiry_date),
+         refresh: res.tokens.refresh_token
+      } as Token;
    }
 
    /**
