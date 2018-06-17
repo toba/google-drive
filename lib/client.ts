@@ -44,13 +44,13 @@ export enum EventType {
  */
 export class GoogleDriveClient {
    private config: GoogleConfig;
-   private oauth: OAuth2Client;
    private cache: CompressCache;
    private _drive: drive_v3.Drive;
+   private oauth: OAuth2Client;
    events: EventEmitter<EventType, any>;
 
    constructor(config: GoogleConfig) {
-      this.config = merge(config, defaultConfig as GoogleConfig);
+      this.config = merge(config, defaultConfig);
       this.oauth = new google.auth.OAuth2(
          config.auth.clientID,
          config.auth.secret,
@@ -105,6 +105,10 @@ export class GoogleDriveClient {
          prompt: AuthPrompt.Consent,
          scope: this.config.scope
       } as GenerateAuthUrlOpts);
+   }
+
+   getAccessToken() {
+      return this.oauth.getAccessToken();
    }
 
    /**
