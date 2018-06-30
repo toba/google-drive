@@ -9,6 +9,7 @@ import {
    CompressCache,
    inferMimeType
 } from '@toba/tools';
+import { log } from '@toba/logger';
 import { Token } from '@toba/oauth';
 import { google, drive_v3 } from 'googleapis';
 import {
@@ -74,6 +75,8 @@ export class GoogleDriveClient {
       }
 
       google.options({ auth: this.oauth });
+
+      log.debug('Created Google Drive client manager');
    }
 
    /**
@@ -82,6 +85,7 @@ export class GoogleDriveClient {
    get drive(): drive_v3.Drive {
       if (this._drive === null) {
          this._drive = google.drive('v3');
+         log.debug('Created Google Drive client');
       }
       return this._drive;
    }
