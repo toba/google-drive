@@ -145,9 +145,11 @@ export class GoogleDriveClient {
                   reject(err);
                } else if (res.status != HttpStatus.OK) {
                   reject(
-                     `Server returned HTTP status ${res.status} for [${
-                        params.q
-                     }]`
+                     new Error(
+                        `Server returned HTTP status ${res.status} for [${
+                           params.q
+                        }]`
+                     )
                   );
                } else if (
                   is.defined(res, 'data') &&
@@ -155,7 +157,7 @@ export class GoogleDriveClient {
                ) {
                   resolve(res.data.files);
                } else {
-                  reject(`No data returned for [${params.q}]`);
+                  reject(new Error(`No data returned for [${params.q}]`));
                }
             }
          );
@@ -179,7 +181,9 @@ export class GoogleDriveClient {
                if (is.value(err)) {
                   reject(err);
                } else if (res.status != HttpStatus.OK) {
-                  reject(`Server returned HTTP status ${res.status}`);
+                  reject(
+                     new Error(`Server returned HTTP status ${res.status}`)
+                  );
                } else if (is.defined(res, 'data')) {
                   this.events.emit(EventType.FoundFile, fileName);
                   resolve(res.data as T);
@@ -188,7 +192,7 @@ export class GoogleDriveClient {
                   if (fileName != null) {
                      msg += ' ' + fileName;
                   }
-                  reject(msg);
+                  reject(new Error(msg));
                }
             }
          );
@@ -279,7 +283,7 @@ export class GoogleDriveClient {
       const files = await this.getFileList(params);
 
       if (files.length == 0) {
-         throw `File not found: “${fileName}”`;
+         throw new Error(`File not found: “${fileName}”`);
       } else if (is.value(stream)) {
          return this.streamFile(files[0].id, fileName, stream);
       } else {
