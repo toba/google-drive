@@ -63,5 +63,6 @@ test('streams file content', async () => {
    }
    const stream = new MemoryStream();
    await client.readFileWithName(testFile.name, stream);
+   expect(stream.receivedData).toBe(true);
    expect(stream.text.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
 });

@@ -202,7 +202,7 @@ export class GoogleDriveClient {
     * @see https://github.com/google/google-api-nodejs-client/blob/master/samples/drive/download.js
     */
    async streamFile(fileId: string, fileName: string, stream: Writable) {
-      return new Promise<any>(async (resolve, reject) => {
+      return new Promise<void>(async (resolve, reject) => {
          stream.on('finish', resolve);
 
          const params: GetFileParams = {
@@ -242,15 +242,18 @@ export class GoogleDriveClient {
    }
 
    /**
-    * Retrieve text content of named file. If `stream` is supplied then content
-    * will be piped to it rather than returned in `Promise`.
-    *
+    * Retrieve text content of named file.
+    */
+   readFileWithName(fileName: string): Promise<string>;
+   /**
+    * Pipe content of named file to stream.
     * @param stream Usually an instance of `ServerResponse`
     */
+   readFileWithName(fileName: string, stream: Writable): Promise<void>;
    async readFileWithName(
       fileName: string,
       stream?: Writable
-   ): Promise<string> {
+   ): Promise<string | void> {
       return this.config.useCache && !is.value(stream)
          ? this.cache.getText(fileName)
          : this.getFileWithName(fileName, stream);
@@ -260,10 +263,12 @@ export class GoogleDriveClient {
     * Find file with name by creating query and retrieving with ID of first
     * matching item.
     */
+   private getFileWithName(fileName: string): Promise<string>;
+   private getFileWithName(fileName: string, stream: Writable): Promise<void>;
    private async getFileWithName(
       fileName: string,
       stream?: Writable
-   ): Promise<string> {
+   ): Promise<string | void> {
       await this.ensureAccess();
 
       const params: ListFilesParams = {
