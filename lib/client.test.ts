@@ -5,10 +5,9 @@ import { GoogleDriveClient as Client } from './client';
 import { testConfig, testFile } from './.test-data';
 
 let client: Client;
-let isConfigured = false;
+const isConfigured = testConfig.apiKey !== undefined;
 
 beforeAll(() => {
-   isConfigured = testConfig.apiKey !== undefined;
    if (isConfigured) {
       client = new Client(testConfig);
    }
@@ -18,51 +17,35 @@ test('relies on configured API key', () => {
    expect(testConfig.apiKey).toBeDefined();
 });
 
-test('returns current token', () => {
-   if (!isConfigured) {
-      return;
-   }
-   expect(client.token).toBe(testConfig.auth.token);
-});
+if (isConfigured) {
+   test('returns current token', () => {
+      expect(client.token).toBe(testConfig.auth.token);
+   });
 
-test('creates Google client', () => {
-   if (!isConfigured) {
-      return;
-   }
-   expect(client).toBeDefined();
-});
+   test('creates Google client', () => {
+      expect(client).toBeDefined();
+   });
 
-test('creates Drive client', () => {
-   if (!isConfigured) {
-      return;
-   }
-   expect(client.drive).toBeDefined();
-});
+   test('creates Drive client', () => {
+      expect(client.drive).toBeDefined();
+   });
 
-test('genenerates authorization URL', () => {
-   if (!isConfigured) {
-      return;
-   }
-   const url = client.authorizationURL;
-   expect(url).toBeDefined();
-   expect(/google/.test(url)).toBe(true);
-});
+   test('genenerates authorization URL', () => {
+      const url = client.authorizationURL;
+      expect(url).toBeDefined();
+      expect(/google/.test(url)).toBe(true);
+   });
 
-test('retrieves file content', async () => {
-   if (!isConfigured) {
-      return;
-   }
-   const gpxText = await client.readFileWithName(testFile.name);
-   expect(typeof gpxText).toBe(is.Type.String);
-   expect(gpxText.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
-});
+   test('retrieves file content', async () => {
+      const gpxText = await client.readFileWithName(testFile.name);
+      expect(typeof gpxText).toBe(is.Type.String);
+      expect(gpxText.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
+   });
 
-test('streams file content', async () => {
-   if (!isConfigured) {
-      return;
-   }
-   const stream = new MemoryStream();
-   await client.readFileWithName(testFile.name, stream);
-   expect(stream.receivedData).toBe(true);
-   expect(stream.text.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
-});
+   test('streams file content', async () => {
+      const stream = new MemoryStream();
+      await client.readFileWithName(testFile.name, stream);
+      expect(stream.receivedData).toBe(true);
+      expect(stream.text.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
+   });
+}
