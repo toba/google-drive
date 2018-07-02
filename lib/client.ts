@@ -2,12 +2,9 @@ import { Writable } from 'stream';
 import {
    is,
    merge,
-   Header,
    HttpStatus,
-   MimeType,
    EventEmitter,
-   CompressCache,
-   inferMimeType
+   CompressCache
 } from '@toba/tools';
 import { log } from '@toba/logger';
 import { Token } from '@toba/oauth';
@@ -31,6 +28,7 @@ import {
 // the version in `node_modules/googleapis/package.json`.
 import { OAuth2Client } from 'google-auth-library';
 import { defaultConfig, GoogleConfig } from './config';
+import { Unzip } from 'zlib';
 
 export enum EventType {
    RefreshTokenError,
@@ -61,8 +59,7 @@ export class GoogleDriveClient {
       this.events = new EventEmitter<EventType, any>();
 
       if (this.config.useCache) {
-         // assign method that will load file content not found in cache
-         this.cache = new CompressCache(this.getFileWithName.bind(this), {
+         this.cache = new CompressCache({
             maxBytes: this.config.cacheSize
          });
       }
@@ -76,7 +73,38 @@ export class GoogleDriveClient {
 
       google.options({ auth: this.oauth });
 
-      log.debug('Created Google Drive client manager');
+      this.logInfo('Created Google Drive client manager');
+   }
+
+   /**
+    * Log information level if logging is enabled.
+    */
+   private logInfo(msg: string | Error, data?: any) {
+      if (!this.config.disableLogging) {
+         log.info(msg, data);
+      }
+   }
+
+   /**
+    * Log error level if logging is enabled.
+    */
+   private logError(msg: string | Error, data?: any) {
+      if (!this.config.disableLogging) {
+         log.error(msg, data);
+      }
+   }
+
+   /**
+    * Log error if logging is enabled and pass same message to Promise reject
+    * method.
+    */
+   private logAndReject(
+      reject: (msg: string | Error) => void,
+      msg: string | Error,
+      data?: any
+   ) {
+      this.logError(msg, data);
+      reject(msg);
    }
 
    /**
@@ -85,7 +113,7 @@ export class GoogleDriveClient {
    get drive(): drive_v3.Drive {
       if (this._drive === null) {
          this._drive = google.drive('v3');
-         log.debug('Created Google Drive client');
+         this.logInfo('Created Google Drive client');
       }
       return this._drive;
    }
@@ -131,7 +159,6 @@ export class GoogleDriveClient {
     */
    private async ensureAccess() {
       await this.oauth.getRequestMetadata();
-      this.events.emit(EventType.RefreshedAccessToken);
    }
 
    /**
@@ -146,14 +173,14 @@ export class GoogleDriveClient {
             params,
             (err: RequestError, res: GetFileListResponse) => {
                if (is.value(err)) {
-                  reject(err);
+                  this.logAndReject(reject, err);
                } else if (res.status != HttpStatus.OK) {
-                  reject(
-                     new Error(
-                        `Server returned HTTP status ${res.status} for [${
-                           params.q
-                        }]`
-                     )
+                  this.logAndReject(
+                     reject,
+                     `Server returned HTTP status ${res.status} for [${
+                        params.q
+                     }]`,
+                     { query: params.q }
                   );
                } else if (
                   is.defined(res, 'data') &&
@@ -161,7 +188,11 @@ export class GoogleDriveClient {
                ) {
                   resolve(res.data.files);
                } else {
-                  reject(new Error(`No data returned for [${params.q}]`));
+                  this.logAndReject(
+                     reject,
+                     `No data returned for [${params.q}]`,
+                     { query: params.q }
+                  );
                }
             }
          );
@@ -183,20 +214,22 @@ export class GoogleDriveClient {
             params,
             (err: RequestError, res: GetFileResponse<T>) => {
                if (is.value(err)) {
-                  reject(err);
+                  this.logAndReject(reject, err, { fileName });
                } else if (res.status != HttpStatus.OK) {
-                  reject(
-                     new Error(`Server returned HTTP status ${res.status}`)
+                  this.logAndReject(
+                     reject,
+                     `Server returned HTTP status ${res.status}`,
+                     { fileName }
                   );
                } else if (is.defined(res, 'data')) {
                   this.events.emit(EventType.FoundFile, fileName);
-                  resolve(res.data as T);
+                  resolve(res.data);
                } else {
                   let msg = 'No data returned for file';
                   if (fileName != null) {
                      msg += ' ' + fileName;
                   }
-                  reject(new Error(msg));
+                  this.logAndReject(reject, msg, { fileName });
                }
             }
          );
@@ -204,7 +237,17 @@ export class GoogleDriveClient {
    }
 
    /**
-    * Send file content directly to writable stream.
+    * Send file content directly to writable stream. Drive's `files.get()`
+    * method returns `file.data` as a `zlib.Unzip` stream reader object
+    * which means GZipped files will always be decompressed -- no way to pass
+    * through a file and have it remain compressed.
+    *
+    * @see https://nodejs.org/api/zlib.html#zlib_class_zlib_unzip
+    *
+    * This is due to Drive's use of the Axios HTTP adapter which pipes to
+    * `zlib.createUnzip()` for any compressed content encoding.
+    *
+    * @see https://github.com/axios/axios/blob/405fe690f93264d591b7a64d006314e2222c8727/lib/adapters/http.js#L160
     *
     * @see https://developers.google.com/drive/api/v3/manage-downloads
     * @see https://github.com/google/google-api-nodejs-client/blob/master/samples/drive/download.js
@@ -218,32 +261,16 @@ export class GoogleDriveClient {
             alt: ResponseAlt.Media
          };
 
-         const file = await this.drive.files.get(params, {
+         const res = await this.drive.files.get(params, {
             responseType: ResponseType.Stream
          });
 
-         (file.data as NodeJS.ReadableStream)
+         (res.data as Unzip)
             .on('error', (err: RequestError) => {
-               reject(err);
+               this.logAndReject(reject, err, { fileName });
             })
             .on('end', () => {
                this.events.emit(EventType.FoundFile, fileName);
-            })
-            .on('response', (res: any) => {
-               // response headers are piped directly to the stream so changes
-               // must happen here
-               let mimeType = MimeType.Binary;
-
-               if (fileName === null) {
-                  fileName = new Date().toDateString();
-               } else {
-                  mimeType = inferMimeType(fileName);
-               }
-
-               res.headers[
-                  Header.Content.Disposition.toLowerCase()
-               ] = `attachment; filename=${fileName}`;
-               res.headers[Header.Content.Type.toLowerCase()] = mimeType;
             })
             .pipe(stream);
       });
@@ -291,7 +318,7 @@ export class GoogleDriveClient {
       } else if (is.value(stream)) {
          return this.streamFile(files[0].id, fileName, stream);
       } else {
-         return this.readFileWithID(files[0].id);
+         return this.readFileWithID(files[0].id, fileName);
       }
    }
 

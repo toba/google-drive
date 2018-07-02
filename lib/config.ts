@@ -6,6 +6,11 @@ export interface GoogleConfig {
    useCache: boolean;
    /** Cache size in bytes */
    cacheSize: number;
+   /**
+    * Whether to disable logging. Default is `false`. If disabled, emitted
+    * events may be used instead to detect important state changes.
+    */
+   disableLogging?: boolean;
    scope?: Scope | Scope[];
    apiKey: string;
    folderID: string;
@@ -13,7 +18,8 @@ export interface GoogleConfig {
 }
 
 export const defaultConfig: Partial<GoogleConfig> = {
-   cacheSize: 2048,
+   cacheSize: 10000,
    useCache: true,
+   disableLogging: false,
    scope: [Scope.DriveReadOnly, Scope.DriveMetadataReadOnly]
 };
