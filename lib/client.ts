@@ -77,7 +77,7 @@ export class GoogleDriveClient {
    }
 
    /**
-    * Log information level if logging is enabled.
+    * Log information if logging is enabled.
     */
    private logInfo(msg: string | Error, data?: any) {
       if (!this.config.disableLogging) {
@@ -86,7 +86,7 @@ export class GoogleDriveClient {
    }
 
    /**
-    * Log error level if logging is enabled.
+    * Log error if logging is enabled.
     */
    private logError(msg: string | Error, data?: any) {
       if (!this.config.disableLogging) {
