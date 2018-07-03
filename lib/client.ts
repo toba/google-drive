@@ -4,7 +4,8 @@ import {
    merge,
    HttpStatus,
    EventEmitter,
-   CompressCache
+   CompressCache,
+   CacheEventType
 } from '@toba/tools';
 import { log } from '@toba/logger';
 import { Token } from '@toba/oauth';
@@ -34,7 +35,8 @@ export enum EventType {
    RefreshTokenError,
    RefreshedAccessToken,
    FoundFile,
-   FileNotFound
+   FileNotFound,
+   CacheMiss
 }
 
 /**
@@ -59,9 +61,17 @@ export class GoogleDriveClient {
       this.events = new EventEmitter<EventType, any>();
 
       if (this.config.useCache) {
-         this.cache = new CompressCache({
+         this.cache = new CompressCache(this.getFileWithName.bind(this), {
             maxBytes: this.config.cacheSize
          });
+         // emit key not found as cache miss event
+         this.cache.events.subscribe(
+            CacheEventType.KeyNotFound,
+            (key: string) => {
+               this.events.emit(EventType.CacheMiss, key);
+               this.logInfo(`File not found in cache`, { fileName: key });
+            }
+         );
       }
 
       if (is.value<Token>(config.auth.token)) {
@@ -74,6 +84,15 @@ export class GoogleDriveClient {
       google.options({ auth: this.oauth });
 
       this.logInfo('Created Google Drive client manager');
+   }
+
+   /**
+    * Clear file cache.
+    */
+   clearCache(): void {
+      if (this.config.useCache) {
+         this.cache.clear();
+      }
    }
 
    /**
@@ -279,31 +298,17 @@ export class GoogleDriveClient {
    /**
     * Retrieve text content of named file.
     */
-   readFileWithName(fileName: string): Promise<string>;
-   /**
-    * Pipe content of named file to stream.
-    * @param stream Usually an instance of `ServerResponse`
-    */
-   readFileWithName(fileName: string, stream: Writable): Promise<void>;
-   async readFileWithName(
-      fileName: string,
-      stream?: Writable
-   ): Promise<string | void> {
-      return this.config.useCache && !is.value(stream)
+   async readFileWithName(fileName: string): Promise<string> {
+      return this.config.useCache
          ? this.cache.getText(fileName)
-         : this.getFileWithName(fileName, stream);
+         : this.getFileWithName(fileName);
    }
 
    /**
     * Find file with name by creating query and retrieving with ID of first
     * matching item.
     */
-   private getFileWithName(fileName: string): Promise<string>;
-   private getFileWithName(fileName: string, stream: Writable): Promise<void>;
-   private async getFileWithName(
-      fileName: string,
-      stream?: Writable
-   ): Promise<string | void> {
+   private async getFileWithName(fileName: string): Promise<string> {
       await this.ensureAccess();
 
       const params: ListFilesParams = {
@@ -315,16 +320,13 @@ export class GoogleDriveClient {
 
       if (files.length == 0) {
          throw new Error(`File not found: “${fileName}”`);
-      } else if (is.value(stream)) {
-         return this.streamFile(files[0].id, fileName, stream);
       } else {
          return this.readFileWithID(files[0].id, fileName);
       }
    }
 
    /**
-    * Download or stream file content. Note that Google downloader uses Request
-    * module.
+    * Download file content.
     *
     * @see https://developers.google.com/drive/v3/web/manage-downloads
     */
@@ -337,11 +339,11 @@ export class GoogleDriveClient {
          timeout: 10000
       };
 
-      const data = await this.getFileData<string>(params, fileName);
+      const text = await this.getFileData<string>(params, fileName);
 
       if (this.config.useCache && fileName != null) {
-         this.cache.addText(fileName, data);
+         this.cache.addText(fileName, text);
       }
-      return data;
+      return text;
    }
 }
