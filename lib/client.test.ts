@@ -1,4 +1,5 @@
 import '@toba/test';
+import { MemoryStream, sleep } from '@toba/test';
 import { is, clone } from '@toba/tools';
 import { GoogleDriveClient as Client, EventType } from './client';
 import { testConfig, testFile } from './.test-data';
@@ -57,6 +58,31 @@ if (isConfigured) {
       expect(miss).toHaveBeenCalledTimes(1);
       // should read from cache second time
       gpxText = await cacheClient.readFileWithName(testFile.name);
+      expect(miss).toHaveBeenCalledTimes(1);
+   });
+
+   test('streams files', async () => {
+      const stream = new MemoryStream();
+      const config = clone(testConfig);
+      const miss = jest.fn();
+
+      config.useCache = true;
+      config.cacheSize = 10000;
+
+      const cacheClient = new Client(config);
+
+      cacheClient.events.subscribe(EventType.CacheMiss, miss);
+
+      await cacheClient.streamFileWithName(testFile.name, stream);
+      expect(stream.receivedData).toBe(true);
+      expect(miss).toHaveBeenCalledTimes(1);
+
+      // stream from cache
+      await sleep(2000);
+      const stream2 = new MemoryStream();
+      await cacheClient.streamFileWithName(testFile.name, stream2);
+      expect(stream2.receivedData).toBe(true);
+      // shouldn't miss the second time
       expect(miss).toHaveBeenCalledTimes(1);
    });
 }

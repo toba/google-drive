@@ -5,7 +5,8 @@ import {
    HttpStatus,
    EventEmitter,
    CompressCache,
-   CacheEventType
+   CacheEventType,
+   Encoding
 } from '@toba/tools';
 import { log } from '@toba/logger';
 import { Token } from '@toba/oauth';
@@ -298,17 +299,28 @@ export class GoogleDriveClient {
    /**
     * Retrieve text content of named file.
     */
-   async readFileWithName(fileName: string): Promise<string> {
+   readFileWithName(fileName: string): Promise<string> {
       return this.config.useCache
          ? this.cache.getText(fileName)
          : this.getFileWithName(fileName);
    }
 
+   async streamFileWithName(fileName: string, stream: Writable): Promise<void> {
+      if (this.config.useCache) {
+         const bytes = this.cache.getZip(fileName);
+         if (is.value<Buffer>(bytes)) {
+            stream.write(bytes, Encoding.Buffer);
+            return;
+         }
+      }
+      const fileID: string = await this.getFileIdForName(fileName);
+      return this.streamFile(fileID, fileName, stream);
+   }
+
    /**
-    * Find file with name by creating query and retrieving with ID of first
-    * matching item.
+    * Get ID of first file having given name.
     */
-   private async getFileWithName(fileName: string): Promise<string> {
+   private async getFileIdForName(fileName: string): Promise<string> {
       await this.ensureAccess();
 
       const params: ListFilesParams = {
@@ -321,7 +333,21 @@ export class GoogleDriveClient {
       if (files.length == 0) {
          throw new Error(`File not found: “${fileName}”`);
       } else {
-         return this.readFileWithID(files[0].id, fileName);
+         return files[0].id;
+      }
+   }
+
+   /**
+    * Find file with name by creating query and retrieving with ID of first
+    * matching item.
+    */
+   private async getFileWithName(fileName: string): Promise<string> {
+      const fileID: string = await this.getFileIdForName(fileName);
+
+      if (fileID === null) {
+         throw new Error(`File not found: “${fileName}”`);
+      } else {
+         return this.readFileWithID(fileID, fileName);
       }
    }
 
