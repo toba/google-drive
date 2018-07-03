@@ -81,8 +81,8 @@
     ts-jest "^22.4.0"
 
 "@toba/tools@^3.2.0", "@toba/tools@^3.8.0":
-  version "3.10.0"
-  resolved "https://registry.yarnpkg.com/@toba/tools/-/tools-3.10.0.tgz#bdfef2f0ab0a739c1d42945b5d28be93439f701e"
+  version "3.10.1"
+  resolved "https://registry.yarnpkg.com/@toba/tools/-/tools-3.10.1.tgz#22ee17ce732ab7bdbf4b6e58c076d4b1a42ce053"
 
 "@types/jest@^23.1.0":
   version "23.1.4"
