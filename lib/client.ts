@@ -307,7 +307,7 @@ export class GoogleDriveClient {
 
    async streamFileWithName(fileName: string, stream: Writable): Promise<void> {
       if (this.config.useCache) {
-         const bytes = this.cache.getZip(fileName);
+         const bytes = await this.cache.getZip(fileName);
          if (is.value<Buffer>(bytes)) {
             stream.write(bytes, Encoding.Buffer);
             return;

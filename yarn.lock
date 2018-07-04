@@ -55,7 +55,7 @@
     tslint-config-prettier "^1.13.0"
     tslint-consistent-codestyle "^1.13.0"
 
-"@toba/logger@^1.0.3", "@toba/logger@^1.0.4":
+"@toba/logger@^1.0.4", "@toba/logger@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@toba/logger/-/logger-1.1.0.tgz#b622ef576f2a62852c786c617fd594c21089132a"
   dependencies:
@@ -68,7 +68,7 @@
     "@types/oauth" "^0.9.0"
     oauth "^0.9.15"
 
-"@toba/test@^1.18.0":
+"@toba/test@^1.20.0":
   version "1.20.0"
   resolved "https://registry.yarnpkg.com/@toba/test/-/test-1.20.0.tgz#5385595e37fa6b15b834ff84aaf3ef495d47bb87"
   dependencies:
@@ -80,15 +80,15 @@
     jest-localstorage-mock "^2.2.0"
     ts-jest "^22.4.0"
 
-"@toba/tools@^3.2.0", "@toba/tools@^3.8.0":
-  version "3.11.0"
-  resolved "https://registry.yarnpkg.com/@toba/tools/-/tools-3.11.0.tgz#4f56a6c51d4185974c1a592823a7345ad66f4362"
+"@toba/tools@^3.11.0", "@toba/tools@^3.2.0", "@toba/tools@^3.8.0":
+  version "3.11.1"
+  resolved "https://registry.yarnpkg.com/@toba/tools/-/tools-3.11.1.tgz#ec9490406a635e0c9e496988e4c057f2aeabef1e"
 
 "@types/jest@^23.1.0":
   version "23.1.4"
   resolved "https://registry.yarnpkg.com/@types/jest/-/jest-23.1.4.tgz#71e1e2d08b1db742f479ee2795536ebc999a2419"
 
-"@types/node@*", "@types/node@^10.3.0":
+"@types/node@*", "@types/node@^10.3.0", "@types/node@^10.5.0":
   version "10.5.1"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-10.5.1.tgz#d578446f4abff5c0b49ade9b4e5274f6badaadfc"
 
