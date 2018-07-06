@@ -330,11 +330,7 @@ export class GoogleDriveClient {
 
       const files = await this.getFileList(params);
 
-      if (files.length == 0) {
-         throw new Error(`File not found: “${fileName}”`);
-      } else {
-         return files[0].id;
-      }
+      return files.length == 0 ? null : files[0].id;
    }
 
    /**
