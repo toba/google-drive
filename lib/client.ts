@@ -341,7 +341,7 @@ export class GoogleDriveClient {
       const fileID: string = await this.getFileIdForName(fileName);
 
       if (fileID === null) {
-         throw new Error(`File not found: “${fileName}”`);
+         return Promise.reject(`File not found: “${fileName}”`);
       } else {
          return this.readFileWithID(fileID, fileName);
       }
