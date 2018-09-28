@@ -1,54 +1,88 @@
 import '@toba/test';
-import { is } from '@toba/tools';
-import { GoogleDriveClient as Client } from './client';
+import { MemoryStream, sleep } from '@toba/test';
+import { is, clone } from '@toba/tools';
+import { GoogleDriveClient as Client, EventType } from './client';
 import { testConfig, testFile } from './.test-data';
 
 let client: Client;
-let isConfigured = false;
+const isConfigured = testConfig.apiKey !== undefined;
 
 beforeAll(() => {
-   isConfigured = testConfig.apiKey !== undefined;
    if (isConfigured) {
       client = new Client(testConfig);
    }
 });
 
-test('Relies on configured API key', () => {
+test('relies on configured API key', () => {
    expect(testConfig.apiKey).toBeDefined();
 });
 
-test('Returns current token', () => {
-   if (!isConfigured) {
-      return;
-   }
-   expect(client.token).toBe(testConfig.auth.token);
-});
+if (isConfigured) {
+   test('returns current token', () => {
+      expect(client.token).toBe(testConfig.auth.token);
+   });
 
-test('Creates Google client', () => {
-   if (!isConfigured) {
-      return;
-   }
-   expect(client).toBeDefined();
-});
+   test('creates Google client', () => {
+      expect(client).toBeDefined();
+   });
 
-test('Creates Drive client', () => {
-   if (!isConfigured) {
-      return;
-   }
-   expect(client.drive).toBeDefined();
-});
+   test('creates Drive client', () => {
+      expect(client.drive).toBeDefined();
+   });
 
-test('Genenerates authorization URL', () => {
-   if (!isConfigured) {
-      return;
-   }
-   const url = client.authorizationURL;
-   expect(url).toBeDefined();
-   expect(/google/.test(url)).toBe(true);
-});
+   test('genenerates authorization URL', () => {
+      const url = client.authorizationURL;
+      expect(url).toBeDefined();
+      expect(/google/.test(url)).toBe(true);
+   });
 
-test('Retrieves file content', async () => {
-   const gpxText = await client.readFileWithName(testFile.name);
-   expect(typeof gpxText).toBe(is.Type.String);
-   expect(gpxText.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
-});
+   test('retrieves file content', async () => {
+      const gpxText = await client.readFileWithName(testFile.name);
+      expect(typeof gpxText).toBe(is.Type.String);
+      expect(gpxText.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
+   });
+
+   test('caches file contents', async () => {
+      const config = clone(testConfig);
+      const miss = jest.fn();
+
+      config.useCache = true;
+      config.cacheSize = 10000;
+
+      const cacheClient = new Client(config);
+
+      cacheClient.events.subscribe(EventType.CacheMiss, miss);
+
+      let gpxText = await cacheClient.readFileWithName(testFile.name);
+      expect(gpxText.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
+      expect(miss).toHaveBeenCalledTimes(1);
+      // should read from cache second time
+      gpxText = await cacheClient.readFileWithName(testFile.name);
+      expect(miss).toHaveBeenCalledTimes(1);
+   });
+
+   test('streams files', async () => {
+      const stream = new MemoryStream();
+      const config = clone(testConfig);
+      const miss = jest.fn();
+
+      config.useCache = true;
+      config.cacheSize = 10000;
+
+      const cacheClient = new Client(config);
+
+      cacheClient.events.subscribe(EventType.CacheMiss, miss);
+
+      await cacheClient.streamFileWithName(testFile.name, stream);
+      expect(stream.receivedData).toBe(true);
+      expect(miss).toHaveBeenCalledTimes(1);
+
+      // stream from cache
+      await sleep(2000);
+      const stream2 = new MemoryStream();
+      await cacheClient.streamFileWithName(testFile.name, stream2);
+      expect(stream2.receivedData).toBe(true);
+      // shouldn't miss the second time
+      expect(miss).toHaveBeenCalledTimes(1);
+   });
+}

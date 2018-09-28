@@ -1,21 +1,25 @@
-import { Config as AuthConfig } from '@toba/oauth';
+import { AuthConfig } from '@toba/oauth';
 import { Scope } from './types';
 
-export interface BasicConfig {
+export interface GoogleConfig {
+   /** Whether to cache file content in memory. */
    useCache: boolean;
    /** Cache size in bytes */
    cacheSize: number;
+   /**
+    * Whether to disable logging. Default is `false`. If disabled, emitted
+    * events may be used instead to detect important state changes.
+    */
+   disableLogging?: boolean;
    scope?: Scope | Scope[];
-}
-
-export interface ClientConfig extends BasicConfig {
    apiKey: string;
    folderID: string;
    auth: AuthConfig;
 }
 
-export const defaultConfig: BasicConfig = {
-   cacheSize: 2048,
+export const defaultConfig: Partial<GoogleConfig> = {
+   cacheSize: 10000,
    useCache: true,
+   disableLogging: false,
    scope: [Scope.DriveReadOnly, Scope.DriveMetadataReadOnly]
 };
