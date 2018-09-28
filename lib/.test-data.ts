@@ -24,5 +24,5 @@ export const testConfig: GoogleConfig = {
 
 export const testFile = {
    name: 'With Nick and Kayla on Mores Mountain.gpx',
-   id: null
+   id: null as string
 };
