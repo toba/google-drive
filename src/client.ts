@@ -7,8 +7,7 @@ import {
    CompressCache,
    CacheEventType,
    Encoding
-} from '@toba/tools';
-import { log } from '@toba/logger';
+} from '@toba/node-tools';
 import { Token } from '@toba/oauth';
 import { google, drive_v3 } from 'googleapis';
 import {
@@ -32,7 +31,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { defaultConfig, GoogleConfig } from './config';
 import { Unzip } from 'zlib';
 
-export enum EventType {
+export const enum EventType {
    RefreshTokenError,
    RefreshedAccessToken,
    FoundFile,
@@ -47,7 +46,7 @@ export enum EventType {
 export class GoogleDriveClient {
    private config: GoogleConfig;
    private cache: CompressCache;
-   private _drive: drive_v3.Drive;
+   private _drive: drive_v3.Drive | null;
    private oauth: OAuth2Client;
    events: EventEmitter<EventType, any>;
 
@@ -101,7 +100,7 @@ export class GoogleDriveClient {
     */
    private logInfo(msg: string | Error, data?: any) {
       if (!this.config.disableLogging) {
-         log.info(msg, data);
+         console.info(msg, data);
       }
    }
 
@@ -110,7 +109,7 @@ export class GoogleDriveClient {
     */
    private logError(msg: string | Error, data?: any) {
       if (!this.config.disableLogging) {
-         log.error(msg, data);
+         console.error(msg, data);
       }
    }
 
@@ -141,7 +140,7 @@ export class GoogleDriveClient {
    /**
     * Configured token object.
     */
-   get token(): Token {
+   get token(): Token | undefined {
       return this.config.auth.token;
    }
 
@@ -166,7 +165,9 @@ export class GoogleDriveClient {
       const res = await this.oauth.getToken(code);
       return {
          access: res.tokens.access_token,
-         accessExpiration: new Date(res.tokens.expiry_date),
+         accessExpiration: is.number(res.tokens.expiry_date)
+            ? new Date(res.tokens.expiry_date)
+            : undefined,
          refresh: res.tokens.refresh_token
       } as Token;
    }
@@ -197,9 +198,7 @@ export class GoogleDriveClient {
                } else if (res.status != HttpStatus.OK) {
                   this.logAndReject(
                      reject,
-                     `Server returned HTTP status ${res.status} for [${
-                        params.q
-                     }]`,
+                     `Server returned HTTP status ${res.status} for [${params.q}]`,
                      { query: params.q }
                   );
                } else if (
@@ -226,7 +225,7 @@ export class GoogleDriveClient {
     */
    private async getFileData<T>(
       params: GetFileParams,
-      fileName: string = null
+      fileName: string | null = null
    ) {
       await this.ensureAccess();
       return new Promise<T>((resolve, reject) => {
@@ -299,11 +298,10 @@ export class GoogleDriveClient {
    /**
     * Retrieve text content of named file.
     */
-   readFileWithName(fileName: string): Promise<string> {
-      return this.config.useCache
+   readFileWithName = (fileName: string): Promise<string | null> =>
+      this.config.useCache
          ? this.cache.getText(fileName)
          : this.getFileWithName(fileName);
-   }
 
    async streamFileWithName(fileName: string, stream: Writable): Promise<void> {
       if (this.config.useCache) {
@@ -313,14 +311,17 @@ export class GoogleDriveClient {
             return;
          }
       }
-      const fileID: string = await this.getFileIdForName(fileName);
-      return this.streamFile(fileID, fileName, stream);
+      const fileID: string | null = await this.getFileIdForName(fileName);
+
+      return fileID === null
+         ? Promise.resolve()
+         : this.streamFile(fileID, fileName, stream);
    }
 
    /**
     * Get ID of first file having given name.
     */
-   private async getFileIdForName(fileName: string): Promise<string> {
+   private async getFileIdForName(fileName: string): Promise<string | null> {
       await this.ensureAccess();
 
       const params: ListFilesParams = {
@@ -338,7 +339,7 @@ export class GoogleDriveClient {
     * matching item.
     */
    private async getFileWithName(fileName: string): Promise<string> {
-      const fileID: string = await this.getFileIdForName(fileName);
+      const fileID: string | null = await this.getFileIdForName(fileName);
 
       if (fileID === null) {
          return Promise.reject(`File not found: “${fileName}”`);
@@ -352,7 +353,7 @@ export class GoogleDriveClient {
     *
     * @see https://developers.google.com/drive/v3/web/manage-downloads
     */
-   async readFileWithID(fileId: string, fileName: string = null) {
+   async readFileWithID(fileId: string, fileName: string | null = null) {
       await this.ensureAccess();
 
       const params: GetFileParams = {

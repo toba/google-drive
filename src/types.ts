@@ -1,5 +1,5 @@
 import { AxiosResponse } from 'axios';
-import { MimeType } from '@toba/tools';
+import { MimeType } from '@toba/node-tools';
 export { AxiosError as RequestError } from 'axios';
 
 /**
@@ -7,7 +7,7 @@ export { AxiosError as RequestError } from 'axios';
  * not present at the browser. Valid parameter values are `online`, which is the
  * default value, and 'offline'.
  */
-export enum AccessType {
+export const enum AccessType {
    /**
     * Use if your application needs to refresh access tokens when the user is
     * not present at the browser. This value instructs the Google authorization
@@ -18,13 +18,13 @@ export enum AccessType {
    Online = 'online'
 }
 
-export enum ResponseType {
+export const enum ResponseType {
    /** Indicate response should be streamed. */
    Stream = 'stream',
    Code = 'CODE'
 }
 
-export enum ResponseAlt {
+export const enum ResponseAlt {
    /**
     * Use when downloading files.
     * @see https://developers.google.com/drive/api/v3/manage-downloads#using_altmedia
@@ -39,7 +39,7 @@ export enum ResponseAlt {
  * defaults to "plain" if not present in the request that includes a
  * `code_challenge`.
  */
-export enum CodeChallengeMethod {
+export const enum CodeChallengeMethod {
    Plain = 'plain',
    S256 = 'S256'
 }
@@ -51,7 +51,7 @@ export enum CodeChallengeMethod {
  *
  * @see https://github.com/google/oauth2client/issues/453
  */
-export enum AuthPrompt {
+export const enum AuthPrompt {
    /**
     * Do not display any authentication or consent screens. Must not be
     * specified with other values.
@@ -175,7 +175,7 @@ export interface GenerateAuthUrlOpts {
    code_challenge?: string;
 }
 
-export enum SortBy {
+export const enum SortBy {
    CreateTime = 'createdTime',
    Folder = 'folder',
    ModifiedByMeTime = 'modifiedByMeTime',
@@ -192,7 +192,7 @@ export enum SortBy {
 /**
  * Scope of file query in terms of item type.
  */
-export enum QuerySpace {
+export const enum QuerySpace {
    Drive = 'drive',
    Photos = 'photos',
    AppDataFolder = 'appDataFolder'
@@ -201,7 +201,7 @@ export enum QuerySpace {
 /**
  * Scope of file query in terms of owner.
  */
-export enum Corpora {
+export const enum Corpora {
    User = 'user',
    Domain = 'domain',
    TeamDrive = 'teamDrive',

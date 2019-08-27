@@ -1,6 +1,6 @@
 {
    "name": "@toba/google-drive",
-   "version": "1.6.3",
+   "version": "1.7.0",
    "description": "Toba Google Drive module",
    "private": false,
    "author": {
@@ -11,23 +11,26 @@
    "publishConfig": {
       "access": "public"
    },
+   "main": "cjs/index.js",
+   "module": "esm/index.js",
+   "types": "esm/index.d.ts",
+   "files": [
+      "esm",
+      "cjs"
+   ],
    "scripts": {
-      "prepublishOnly": "./node_modules/.bin/tsc",
+      "build:esm": "./node_modules/.bin/tsc --project ./node_modules/@toba/develop/tsconfig.esm.json",
+      "build:cjs": "./node_modules/.bin/tsc --project ./node_modules/@toba/develop/tsconfig.cjs-min.json",
+      "prepublishOnly": "npm run build:esm & npm run build:cjs",
       "test": "jest --coverage"
    },
-   "main": "dist/index.js",
-   "types:": "dist/index.d.ts",
-   "files": [
-      "dist/**/*"
-   ],
    "//": "lock google-auth-library to the same version imported by googleapis",
    "devDependencies": {
-      "@toba/build": "^1.7.0",
-      "@toba/test": "^1.20.0",
-      "@types/node": "^10.5.0",
+      "@toba/develop": "^6.6.0",
+      "@toba/test": "^4.1.0",
+      "@types/node": "^12.0.0",
       "google-auth-library": "^2.0.0",
-      "prettier": "^1.13.0",
-      "typescript": "^3.1.0"
+      "typescript": "^3.5.0"
    },
    "repository": {
       "type": "git",
@@ -36,14 +39,9 @@
    "bugs": {
       "url": "https://github.com/toba/google-drive/issues"
    },
-   "prettier": {
-      "singleQuote": true,
-      "tabWidth": 3
-   },
    "dependencies": {
-      "@toba/logger": "^1.1.0",
-      "@toba/oauth": "^1.2.0",
-      "@toba/tools": "^3.11.0",
+      "@toba/node-tools": "^1.4.6",
+      "@toba/oauth": "^2.1.0",
       "googleapis": "^34.0.0"
    }
 }

@@ -1,6 +1,6 @@
 import '@toba/test';
 import { MemoryStream, sleep } from '@toba/test';
-import { is, clone } from '@toba/tools';
+import { clone, ValueType } from '@toba/node-tools';
 import { GoogleDriveClient as Client, EventType } from './client';
 import { testConfig, testFile } from './.test-data';
 
@@ -38,8 +38,8 @@ if (isConfigured) {
 
    test('retrieves file content', async () => {
       const gpxText = await client.readFileWithName(testFile.name);
-      expect(typeof gpxText).toBe(is.Type.String);
-      expect(gpxText.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
+      expect(typeof gpxText).toBe(ValueType.String);
+      expect(gpxText!.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
    });
 
    test('caches file contents', async () => {
@@ -54,7 +54,7 @@ if (isConfigured) {
       cacheClient.events.subscribe(EventType.CacheMiss, miss);
 
       let gpxText = await cacheClient.readFileWithName(testFile.name);
-      expect(gpxText.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
+      expect(gpxText!.indexOf('<?xml')).toBeGreaterThanOrEqual(0);
       expect(miss).toHaveBeenCalledTimes(1);
       // should read from cache second time
       gpxText = await cacheClient.readFileWithName(testFile.name);
