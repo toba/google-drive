@@ -56,6 +56,10 @@ export declare class GoogleDriveClient {
      */
     readonly authorizationURL: string;
     /**
+     * @param code Authorization code returned by initial authorization URL
+     */
+    getAccessToken(code: string): Promise<Token>;
+    /**
      * Ensure the Google API has been authenticated and authorized.
      *
      * @see https://developers.google.com/identity/protocols/OAuth2WebServer#refresh

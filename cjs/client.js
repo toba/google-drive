@@ -71,6 +71,16 @@ class GoogleDriveClient {
             scope: this.config.scope
         });
     }
+    async getAccessToken(code) {
+        const res = await this.oauth.getToken(code);
+        return {
+            access: res.tokens.access_token,
+            accessExpiration: node_tools_1.is.number(res.tokens.expiry_date)
+                ? new Date(res.tokens.expiry_date)
+                : undefined,
+            refresh: res.tokens.refresh_token
+        };
+    }
     async ensureAccess() {
         return;
     }
