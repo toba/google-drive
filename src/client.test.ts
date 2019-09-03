@@ -22,6 +22,10 @@ if (isConfigured) {
       expect(client.token).toEqual(testConfig.auth.token);
    });
 
+   test('defines method to retrieve access token', () => {
+      expect(client.getAccessToken).toBeDefined();
+   });
+
    test('creates Google client', () => {
       expect(client).toBeDefined();
    });

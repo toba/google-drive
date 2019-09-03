@@ -162,6 +162,20 @@ export class GoogleDriveClient {
    }
 
    /**
+    * @param code Authorization code returned by initial authorization URL
+    */
+   async getAccessToken(code: string): Promise<Token> {
+      const res = await this.oauth.getToken(code);
+      return {
+         access: res.tokens.access_token,
+         accessExpiration: is.number(res.tokens.expiry_date)
+            ? new Date(res.tokens.expiry_date)
+            : undefined,
+         refresh: res.tokens.refresh_token
+      } as Token;
+   }
+
+   /**
     * Ensure the Google API has been authenticated and authorized.
     *
     * @see https://developers.google.com/identity/protocols/OAuth2WebServer#refresh
