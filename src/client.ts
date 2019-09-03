@@ -15,19 +15,18 @@ import {
    AuthPrompt,
    GetFileResponse,
    GetFileListResponse,
-   GenerateAuthUrlOpts,
+   GetFileParams,
+   ListFilesParams,
    RequestError,
    ResponseAlt,
    ResponseType,
    DriveFile,
-   ListFilesParams,
-   GetFileParams,
    QuerySpace
 } from './types';
 // `google-auth-library` is included by `googleapis` and only needed for its
 // type information. The version specified in local `package.json` must match
 // the version in `node_modules/googleapis/package.json`.
-import { OAuth2Client } from 'google-auth-library';
+import { OAuth2Client, GenerateAuthUrlOpts } from 'google-auth-library';
 import { defaultConfig, GoogleConfig } from './config';
 import { Unzip } from 'zlib';
 
@@ -40,13 +39,13 @@ export const enum EventType {
 }
 
 /**
- * @see http://google.github.io/google-api-nodejs-client/
+ * @see https://googleapis.dev/nodejs/googleapis/latest/drive/index.html
  * @see https://github.com/google/google-api-nodejs-client/blob/master/samples/sampleclient.js#L35
  */
 export class GoogleDriveClient {
    private config: GoogleConfig;
    private cache: CompressCache;
-   private _drive: drive_v3.Drive | null;
+   private api: drive_v3.Drive | null;
    private oauth: OAuth2Client;
    events: EventEmitter<EventType, any>;
 
@@ -57,7 +56,7 @@ export class GoogleDriveClient {
          config.auth.secret,
          config.auth.callback
       );
-      this._drive = null;
+      this.api = null;
       this.events = new EventEmitter<EventType, any>();
 
       if (this.config.useCache) {
@@ -100,7 +99,11 @@ export class GoogleDriveClient {
     */
    private logInfo(msg: string | Error, data?: any) {
       if (!this.config.disableLogging) {
-         console.info(msg, data);
+         if (data !== undefined) {
+            console.info(msg, data);
+         } else {
+            console.info(msg);
+         }
       }
    }
 
@@ -130,11 +133,11 @@ export class GoogleDriveClient {
     * Google's own drive client.
     */
    get drive(): drive_v3.Drive {
-      if (this._drive === null) {
-         this._drive = google.drive('v3');
+      if (this.api === null) {
+         this.api = google.drive('v3');
          this.logInfo('Created Google Drive client');
       }
-      return this._drive;
+      return this.api;
    }
 
    /**
@@ -159,27 +162,14 @@ export class GoogleDriveClient {
    }
 
    /**
-    * @param code Authorization code returned by initial authorization URL
-    */
-   async getAccessToken(code: string): Promise<Token> {
-      const res = await this.oauth.getToken(code);
-      return {
-         access: res.tokens.access_token,
-         accessExpiration: is.number(res.tokens.expiry_date)
-            ? new Date(res.tokens.expiry_date)
-            : undefined,
-         refresh: res.tokens.refresh_token
-      } as Token;
-   }
-
-   /**
     * Ensure the Google API has been authenticated and authorized.
     *
     * @see https://developers.google.com/identity/protocols/OAuth2WebServer#refresh
     * @see https://github.com/google/google-auth-library-nodejs#manually-refreshing-access-token
     */
    private async ensureAccess() {
-      await this.oauth.getRequestMetadata();
+      //await this.oauth.getRequestMetadata();
+      return;
    }
 
    /**
@@ -228,10 +218,10 @@ export class GoogleDriveClient {
       fileName: string | null = null
    ) {
       await this.ensureAccess();
-      return new Promise<T>((resolve, reject) => {
+      return new Promise<any>((resolve, reject) => {
          this.drive.files.get(
             params,
-            (err: RequestError, res: GetFileResponse<T>) => {
+            (err: RequestError, res: GetFileResponse) => {
                if (is.value(err)) {
                   this.logAndReject(reject, err, { fileName });
                } else if (res.status != HttpStatus.OK) {
@@ -331,7 +321,7 @@ export class GoogleDriveClient {
 
       const files = await this.getFileList(params);
 
-      return files.length == 0 ? null : files[0].id;
+      return files.length == 0 ? null : files[0].id!;
    }
 
    /**
@@ -358,13 +348,13 @@ export class GoogleDriveClient {
 
       const params: GetFileParams = {
          fileId,
-         alt: ResponseAlt.Media,
-         timeout: 10000
+         alt: ResponseAlt.Media
+         //timeout: 10000
       };
 
       const text = await this.getFileData<string>(params, fileName);
 
-      if (this.config.useCache && fileName != null) {
+      if (this.config.useCache && fileName !== null) {
          this.cache.addText(fileName, text);
       }
       return text;

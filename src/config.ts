@@ -12,7 +12,7 @@ export interface GoogleConfig {
     */
    disableLogging?: boolean;
    scope?: Scope | Scope[];
-   apiKey: string;
+   apiKey?: string;
    folderID: string;
    auth: AuthConfig;
 }

@@ -2,7 +2,7 @@ import { GoogleConfig } from './config';
 import { AuthConfig } from '@toba/oauth';
 
 /**
- * @see http://code.google.com/apis/console/#project:1033232213688
+ * @see https://console.cloud.google.com/apis/credentials?project=trail-image-blog
  */
 export const testConfig: GoogleConfig = {
    apiKey: process.env['GOOGLE_DRIVE_KEY'],
@@ -10,13 +10,14 @@ export const testConfig: GoogleConfig = {
    useCache: false,
    cacheSize: 0,
    auth: {
+      apiKey: '',
       clientID: process.env['GOOGLE_CLIENT_ID'],
       secret: process.env['GOOGLE_SECRET'],
       callback: 'http://localhost/auth/google',
       token: {
-         type: null,
+         type: undefined,
          access: process.env['GOOGLE_ACCESS_TOKEN'],
-         accessExpiration: null as Date,
+         accessExpiration: undefined,
          refresh: process.env['GOOGLE_REFRESH_TOKEN']
       }
    } as AuthConfig
@@ -24,5 +25,5 @@ export const testConfig: GoogleConfig = {
 
 export const testFile = {
    name: 'With Nick and Kayla on Mores Mountain.gpx',
-   id: null as string
+   id: null as string | null
 };

@@ -19,7 +19,7 @@ test('relies on configured API key', () => {
 
 if (isConfigured) {
    test('returns current token', () => {
-      expect(client.token).toBe(testConfig.auth.token);
+      expect(client.token).toEqual(testConfig.auth.token);
    });
 
    test('creates Google client', () => {
