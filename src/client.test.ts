@@ -50,6 +50,10 @@ if (isConfigured) {
       const config = clone(testConfig);
       const miss = jest.fn();
 
+      if (config === null || config === undefined) {
+         return;
+      }
+
       config.useCache = true;
       config.cacheSize = 10000;
 
@@ -69,6 +73,10 @@ if (isConfigured) {
       const stream = new MemoryStream();
       const config = clone(testConfig);
       const miss = jest.fn();
+
+      if (config === null || config === undefined) {
+         return;
+      }
 
       config.useCache = true;
       config.cacheSize = 10000;
