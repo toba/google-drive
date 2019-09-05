@@ -27,8 +27,8 @@
    "//": "lock google-auth-library to the same version imported by googleapis",
    "devDependencies": {
       "@toba/develop": "^6.6.12",
-      "@toba/test": "^4.1.0",
-      "@types/node": "^12.7.3",
+      "@toba/test": "^4.1.13",
+      "@types/node": "^12.7.4",
       "gaxios": "^2.0.1",
       "google-auth-library": "^5.2.0",
       "typescript": "^3.6.2"
@@ -41,7 +41,7 @@
       "url": "https://github.com/toba/google-drive/issues"
    },
    "dependencies": {
-      "@toba/node-tools": "^1.4.6",
+      "@toba/node-tools": "^1.4.9",
       "@toba/oauth": "^2.1.0",
       "googleapis": "^42.0.0"
    }
