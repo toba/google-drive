@@ -1,6 +1,6 @@
 {
    "name": "@toba/google-drive",
-   "version": "1.7.1",
+   "version": "1.7.2",
    "description": "Toba Google Drive module",
    "private": false,
    "author": {
@@ -26,12 +26,12 @@
    },
    "//": "lock google-auth-library to the same version imported by googleapis",
    "devDependencies": {
-      "@toba/develop": "^6.6.12",
-      "@toba/test": "^4.1.13",
-      "@types/node": "^12.7.4",
+      "@toba/develop": "^6.7.3",
+      "@toba/test": "^4.1.16",
+      "@types/node": "^12.7.5",
       "gaxios": "^2.0.1",
-      "google-auth-library": "^5.2.0",
-      "typescript": "^3.6.2"
+      "google-auth-library": "^5.2.2",
+      "typescript": "^3.6.3"
    },
    "repository": {
       "type": "git",
@@ -43,6 +43,6 @@
    "dependencies": {
       "@toba/node-tools": "^1.4.9",
       "@toba/oauth": "^2.1.0",
-      "googleapis": "^42.0.0"
+      "googleapis": "^43.0.0"
    }
 }
