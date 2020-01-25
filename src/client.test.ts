@@ -15,7 +15,7 @@ test('relies on configured API key', () => {
 })
 
 if (isConfigured) {
-   if (authCode !== undefined && authCode.length > 10) {
+   if (authCode !== undefined) {
       test('exchanges OAuth code for access token', async () => {
          const res = await client.getAccessToken(authCode!)
          expect(res).toBeDefined()

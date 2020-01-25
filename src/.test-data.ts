@@ -23,7 +23,7 @@ export const testConfig: GoogleConfig = {
    } as AuthConfig
 }
 
-export const authCode = undefined //process.env['GOOGLE_OAUTH_CODE']
+export const authCode: string | undefined = undefined //process.env['GOOGLE_OAUTH_CODE']
 
 export const testFile = {
    name: 'With Nick and Kayla on Mores Mountain.gpx',
