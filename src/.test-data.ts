@@ -1,5 +1,5 @@
-import { GoogleConfig } from './config';
-import { AuthConfig } from '@toba/oauth';
+import { GoogleConfig } from './config'
+import { AuthConfig } from '@toba/oauth'
 
 /**
  * @see https://console.cloud.google.com/apis/credentials?project=trail-image-blog
@@ -13,7 +13,7 @@ export const testConfig: GoogleConfig = {
       apiKey: '',
       clientID: process.env['GOOGLE_CLIENT_ID'],
       secret: process.env['GOOGLE_SECRET'],
-      callback: 'http://localhost/auth/google',
+      callback: 'https://www.trailimage.com/auth/google',
       token: {
          type: undefined,
          access: process.env['GOOGLE_ACCESS_TOKEN'],
@@ -21,9 +21,11 @@ export const testConfig: GoogleConfig = {
          refresh: process.env['GOOGLE_REFRESH_TOKEN']
       }
    } as AuthConfig
-};
+}
+
+export const authCode = undefined //process.env['GOOGLE_OAUTH_CODE']
 
 export const testFile = {
    name: 'With Nick and Kayla on Mores Mountain.gpx',
    id: null as string | null
-};
+}

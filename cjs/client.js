@@ -31,9 +31,8 @@ class GoogleDriveClient {
         this.logInfo('Created Google Drive client manager');
     }
     clearCache() {
-        if (this.config.useCache) {
+        if (this.config.useCache)
             this.cache.clear();
-        }
     }
     logInfo(msg, data) {
         if (!this.config.disableLogging) {
@@ -46,9 +45,8 @@ class GoogleDriveClient {
         }
     }
     logError(msg, data) {
-        if (!this.config.disableLogging) {
+        if (!this.config.disableLogging)
             console.error(msg, data);
-        }
     }
     logAndReject(reject, msg, data) {
         this.logError(msg, data);
@@ -82,7 +80,7 @@ class GoogleDriveClient {
         };
     }
     async ensureAccess() {
-        return;
+        return this;
     }
     async getFileList(params) {
         await this.ensureAccess();
@@ -173,11 +171,9 @@ class GoogleDriveClient {
     async getFileWithName(fileName) {
         const fileID = await this.getFileIdForName(fileName);
         if (fileID === null) {
-            return Promise.reject(`File not found: “${fileName}”`);
+            return Promise.reject(new Error(`File not found: “${fileName}”`));
         }
-        else {
-            return this.readFileWithID(fileID, fileName);
-        }
+        return this.readFileWithID(fileID, fileName);
     }
     async readFileWithID(fileId, fileName = null) {
         await this.ensureAccess();

@@ -1,5 +1,8 @@
 import { is, merge, HttpStatus, EventEmitter, CompressCache, CacheEventType } from '@toba/node-tools';
 import { google } from 'googleapis';
+// `google-auth-library` is included by `googleapis` and only needed for its
+// type information. The version specified in local `package.json` must match
+// the version in `node_modules/googleapis/package.json`.
 import { defaultConfig } from './config';
 /**
  * @see https://googleapis.dev/nodejs/googleapis/latest/drive/index.html
@@ -40,9 +43,8 @@ export class GoogleDriveClient {
      * Clear file cache.
      */
     clearCache() {
-        if (this.config.useCache) {
+        if (this.config.useCache)
             this.cache.clear();
-        }
     }
     /**
      * Log information if logging is enabled.
@@ -61,9 +63,8 @@ export class GoogleDriveClient {
      * Log error if logging is enabled.
      */
     logError(msg, data) {
-        if (!this.config.disableLogging) {
+        if (!this.config.disableLogging)
             console.error(msg, data);
-        }
     }
     /**
      * Log error if logging is enabled and pass same message to Promise reject
@@ -115,6 +116,7 @@ export class GoogleDriveClient {
             refresh: res.tokens.refresh_token
         };
     }
+    //https://www.trailimage.com/auth/google?code=4/vwEKxohWPduJkheojcUNybMZf1j7p_pDDdmVTlbXZk5kTs7dOMhExGb2EHTjoCwcsTLt3dHuCtuetCl_HY9A7ao&scope=https://www.googleapis.com/auth/drive.readonly%20https://www.googleapis.com/auth/drive.metadata.readonly
     /**
      * Ensure the Google API has been authenticated and authorized.
      *
@@ -123,7 +125,7 @@ export class GoogleDriveClient {
      */
     async ensureAccess() {
         //await this.oauth.getRequestMetadata();
-        return;
+        return this;
     }
     /**
      * List of files matching query parameter.
@@ -247,11 +249,9 @@ export class GoogleDriveClient {
     async getFileWithName(fileName) {
         const fileID = await this.getFileIdForName(fileName);
         if (fileID === null) {
-            return Promise.reject(`File not found: “${fileName}”`);
+            return Promise.reject(new Error(`File not found: “${fileName}”`));
         }
-        else {
-            return this.readFileWithID(fileID, fileName);
-        }
+        return this.readFileWithID(fileID, fileName);
     }
     /**
      * Download file content.

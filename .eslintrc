@@ -1,3 +1,7 @@
 {
-   "extends": ["./node_modules/@toba/develop/.eslintrc"]
+   "extends": ["./node_modules/@toba/develop/.eslintrc"],
+   "rules": {
+      "@typescript-eslint/camelcase": "off",
+      "no-console": "off"
+   }
 }

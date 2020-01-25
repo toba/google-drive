@@ -43,18 +43,18 @@ export declare class GoogleDriveClient {
     /**
      * Google's own drive client.
      */
-    readonly drive: drive_v3.Drive;
+    get drive(): drive_v3.Drive;
     /**
      * Configured token object.
      */
-    readonly token: Token | undefined;
+    get token(): Token | undefined;
     /**
      * Return URL that can be used to request an access token.
      *
      * @see http://google.github.io/google-api-nodejs-client/22.2.0/index.html#authorizing-and-authenticating
      * @see https://github.com/google/google-auth-library-nodejs#oauth2-client
      */
-    readonly authorizationURL: string;
+    get authorizationURL(): string;
     /**
      * @param code Authorization code returned by initial authorization URL
      */

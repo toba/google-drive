@@ -1,14 +1,14 @@
-import { drive_v3 } from 'googleapis';
-import { GaxiosResponse, GaxiosError } from 'gaxios';
+import { drive_v3 } from 'googleapis'
+import { GaxiosResponse, GaxiosError } from 'gaxios'
 
-export type GetFileParams = drive_v3.Params$Resource$Files$Get;
-export type ListFilesParams = drive_v3.Params$Resource$Files$List;
-export type DriveFileList = drive_v3.Schema$FileList;
-export type DriveFile = drive_v3.Schema$File;
+export type GetFileParams = drive_v3.Params$Resource$Files$Get
+export type ListFilesParams = drive_v3.Params$Resource$Files$List
+export type DriveFileList = drive_v3.Schema$FileList
+export type DriveFile = drive_v3.Schema$File
 
-export type GetFileResponse = GaxiosResponse<DriveFile>;
-export type GetFileListResponse = GaxiosResponse<DriveFileList>;
-export type RequestError = GaxiosError;
+export type GetFileResponse = GaxiosResponse<DriveFile>
+export type GetFileListResponse = GaxiosResponse<DriveFileList>
+export type RequestError = GaxiosError
 
 /**
  * Indicates whether your application can refresh access tokens when the user is

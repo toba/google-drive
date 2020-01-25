@@ -1,20 +1,20 @@
-import { AuthConfig } from '@toba/oauth';
-import { Scope } from './types';
+import { AuthConfig } from '@toba/oauth'
+import { Scope } from './types'
 
 export interface GoogleConfig {
    /** Whether to cache file content in memory. */
-   useCache: boolean;
+   useCache: boolean
    /** Cache size in bytes */
-   cacheSize: number;
+   cacheSize: number
    /**
     * Whether to disable logging. Default is `false`. If disabled, emitted
     * events may be used instead to detect important state changes.
     */
-   disableLogging?: boolean;
-   scope?: Scope | Scope[];
-   apiKey?: string;
-   folderID: string;
-   auth: AuthConfig;
+   disableLogging?: boolean
+   scope?: Scope | Scope[]
+   apiKey?: string
+   folderID: string
+   auth: AuthConfig
 }
 
 export const defaultConfig: Partial<GoogleConfig> = {
@@ -22,4 +22,4 @@ export const defaultConfig: Partial<GoogleConfig> = {
    useCache: true,
    disableLogging: false,
    scope: [Scope.DriveReadOnly, Scope.DriveMetadataReadOnly]
-};
+}

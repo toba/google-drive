@@ -1,4 +1,4 @@
-import { Writable } from 'stream';
+import { Writable } from 'stream'
 import {
    is,
    merge,
@@ -7,9 +7,11 @@ import {
    CompressCache,
    CacheEventType,
    Encoding
-} from '@toba/node-tools';
-import { Token } from '@toba/oauth';
-import { google, drive_v3 } from 'googleapis';
+} from '@toba/node-tools'
+import { Unzip } from 'zlib'
+import { Token } from '@toba/oauth'
+import { google, drive_v3 } from 'googleapis'
+import { OAuth2Client, GenerateAuthUrlOpts } from 'google-auth-library'
 import {
    AccessType,
    AuthPrompt,
@@ -22,13 +24,12 @@ import {
    ResponseType,
    DriveFile,
    QuerySpace
-} from './types';
+} from './types'
 // `google-auth-library` is included by `googleapis` and only needed for its
 // type information. The version specified in local `package.json` must match
 // the version in `node_modules/googleapis/package.json`.
-import { OAuth2Client, GenerateAuthUrlOpts } from 'google-auth-library';
-import { defaultConfig, GoogleConfig } from './config';
-import { Unzip } from 'zlib';
+
+import { defaultConfig, GoogleConfig } from './config'
 
 export const enum EventType {
    RefreshTokenError,
@@ -43,55 +44,53 @@ export const enum EventType {
  * @see https://github.com/google/google-api-nodejs-client/blob/master/samples/sampleclient.js#L35
  */
 export class GoogleDriveClient {
-   private config: GoogleConfig;
-   private cache: CompressCache;
-   private api: drive_v3.Drive | null;
-   private oauth: OAuth2Client;
-   events: EventEmitter<EventType, any>;
+   private config: GoogleConfig
+   private cache: CompressCache
+   private api: drive_v3.Drive | null
+   private oauth: OAuth2Client
+   events: EventEmitter<EventType, any>
 
    constructor(config: GoogleConfig) {
-      this.config = merge(config, defaultConfig);
+      this.config = merge(config, defaultConfig)
       this.oauth = new google.auth.OAuth2(
          config.auth.clientID,
          config.auth.secret,
          config.auth.callback
-      );
-      this.api = null;
-      this.events = new EventEmitter<EventType, any>();
+      )
+      this.api = null
+      this.events = new EventEmitter<EventType, any>()
 
       if (this.config.useCache) {
          this.cache = new CompressCache(this.getFileWithName.bind(this), {
             maxBytes: this.config.cacheSize
-         });
+         })
          // emit key not found as cache miss event
          this.cache.events.subscribe(
             CacheEventType.KeyNotFound,
             (key: string) => {
-               this.events.emit(EventType.CacheMiss, key);
-               this.logInfo(`File not found in cache`, { fileName: key });
+               this.events.emit(EventType.CacheMiss, key)
+               this.logInfo(`File not found in cache`, { fileName: key })
             }
-         );
+         )
       }
 
       if (is.value<Token>(config.auth.token)) {
          this.oauth.setCredentials({
             access_token: config.auth.token.access,
             refresh_token: config.auth.token.refresh
-         });
+         })
       }
 
-      google.options({ auth: this.oauth });
+      google.options({ auth: this.oauth })
 
-      this.logInfo('Created Google Drive client manager');
+      this.logInfo('Created Google Drive client manager')
    }
 
    /**
     * Clear file cache.
     */
    clearCache(): void {
-      if (this.config.useCache) {
-         this.cache.clear();
-      }
+      if (this.config.useCache) this.cache.clear()
    }
 
    /**
@@ -100,9 +99,9 @@ export class GoogleDriveClient {
    private logInfo(msg: string | Error, data?: any) {
       if (!this.config.disableLogging) {
          if (data !== undefined) {
-            console.info(msg, data);
+            console.info(msg, data)
          } else {
-            console.info(msg);
+            console.info(msg)
          }
       }
    }
@@ -111,9 +110,7 @@ export class GoogleDriveClient {
     * Log error if logging is enabled.
     */
    private logError(msg: string | Error, data?: any) {
-      if (!this.config.disableLogging) {
-         console.error(msg, data);
-      }
+      if (!this.config.disableLogging) console.error(msg, data)
    }
 
    /**
@@ -125,8 +122,8 @@ export class GoogleDriveClient {
       msg: string | Error,
       data?: any
    ) {
-      this.logError(msg, data);
-      reject(msg);
+      this.logError(msg, data)
+      reject(msg)
    }
 
    /**
@@ -134,17 +131,17 @@ export class GoogleDriveClient {
     */
    get drive(): drive_v3.Drive {
       if (this.api === null) {
-         this.api = google.drive('v3');
-         this.logInfo('Created Google Drive client');
+         this.api = google.drive('v3')
+         this.logInfo('Created Google Drive client')
       }
-      return this.api;
+      return this.api
    }
 
    /**
     * Configured token object.
     */
    get token(): Token | undefined {
-      return this.config.auth.token;
+      return this.config.auth.token
    }
 
    /**
@@ -158,22 +155,24 @@ export class GoogleDriveClient {
          access_type: AccessType.Offline,
          prompt: AuthPrompt.Consent,
          scope: this.config.scope
-      } as GenerateAuthUrlOpts);
+      } as GenerateAuthUrlOpts)
    }
 
    /**
     * @param code Authorization code returned by initial authorization URL
     */
    async getAccessToken(code: string): Promise<Token> {
-      const res = await this.oauth.getToken(code);
+      const res = await this.oauth.getToken(code)
       return {
          access: res.tokens.access_token,
          accessExpiration: is.number(res.tokens.expiry_date)
             ? new Date(res.tokens.expiry_date)
             : undefined,
          refresh: res.tokens.refresh_token
-      } as Token;
+      } as Token
    }
+
+   //https://www.trailimage.com/auth/google?code=4/vwEKxohWPduJkheojcUNybMZf1j7p_pDDdmVTlbXZk5kTs7dOMhExGb2EHTjoCwcsTLt3dHuCtuetCl_HY9A7ao&scope=https://www.googleapis.com/auth/drive.readonly%20https://www.googleapis.com/auth/drive.metadata.readonly
 
    /**
     * Ensure the Google API has been authenticated and authorized.
@@ -183,7 +182,7 @@ export class GoogleDriveClient {
     */
    private async ensureAccess() {
       //await this.oauth.getRequestMetadata();
-      return;
+      return this
    }
 
    /**
@@ -192,34 +191,34 @@ export class GoogleDriveClient {
     * @see https://developers.google.com/drive/v3/web/search-parameters
     */
    async getFileList(params: ListFilesParams) {
-      await this.ensureAccess();
+      await this.ensureAccess()
       return new Promise<DriveFile[]>((resolve, reject) => {
          this.drive.files.list(
             params,
             (err: RequestError, res: GetFileListResponse) => {
                if (is.value(err)) {
-                  this.logAndReject(reject, err);
+                  this.logAndReject(reject, err)
                } else if (res.status != HttpStatus.OK) {
                   this.logAndReject(
                      reject,
                      `Server returned HTTP status ${res.status} for [${params.q}]`,
                      { query: params.q }
-                  );
+                  )
                } else if (
                   is.defined(res, 'data') &&
                   is.defined(res.data, 'files')
                ) {
-                  resolve(res.data.files);
+                  resolve(res.data.files)
                } else {
                   this.logAndReject(
                      reject,
                      `No data returned for [${params.q}]`,
                      { query: params.q }
-                  );
+                  )
                }
             }
-         );
-      });
+         )
+      })
    }
 
    /**
@@ -231,32 +230,32 @@ export class GoogleDriveClient {
       params: GetFileParams,
       fileName: string | null = null
    ) {
-      await this.ensureAccess();
+      await this.ensureAccess()
       return new Promise<any>((resolve, reject) => {
          this.drive.files.get(
             params,
             (err: RequestError, res: GetFileResponse) => {
                if (is.value(err)) {
-                  this.logAndReject(reject, err, { fileName });
+                  this.logAndReject(reject, err, { fileName })
                } else if (res.status != HttpStatus.OK) {
                   this.logAndReject(
                      reject,
                      `Server returned HTTP status ${res.status}`,
                      { fileName }
-                  );
+                  )
                } else if (is.defined(res, 'data')) {
-                  this.events.emit(EventType.FoundFile, fileName);
-                  resolve(res.data);
+                  this.events.emit(EventType.FoundFile, fileName)
+                  resolve(res.data)
                } else {
-                  let msg = 'No data returned for file';
+                  let msg = 'No data returned for file'
                   if (fileName != null) {
-                     msg += ' ' + fileName;
+                     msg += ' ' + fileName
                   }
-                  this.logAndReject(reject, msg, { fileName });
+                  this.logAndReject(reject, msg, { fileName })
                }
             }
-         );
-      });
+         )
+      })
    }
 
    /**
@@ -277,26 +276,25 @@ export class GoogleDriveClient {
     */
    async streamFile(fileId: string, fileName: string, stream: Writable) {
       return new Promise<void>(async (resolve, reject) => {
-         stream.on('finish', resolve);
+         stream.on('finish', resolve)
 
          const params: GetFileParams = {
             fileId,
             alt: ResponseAlt.Media
-         };
+         }
 
          const res = await this.drive.files.get(params, {
             responseType: ResponseType.Stream
-         });
-
-         (res.data as Unzip)
+         })
+         ;(res.data as Unzip)
             .on('error', (err: RequestError) => {
-               this.logAndReject(reject, err, { fileName });
+               this.logAndReject(reject, err, { fileName })
             })
             .on('end', () => {
-               this.events.emit(EventType.FoundFile, fileName);
+               this.events.emit(EventType.FoundFile, fileName)
             })
-            .pipe(stream);
-      });
+            .pipe(stream)
+      })
    }
 
    /**
@@ -305,37 +303,37 @@ export class GoogleDriveClient {
    readFileWithName = (fileName: string): Promise<string | null> =>
       this.config.useCache
          ? this.cache.getText(fileName)
-         : this.getFileWithName(fileName);
+         : this.getFileWithName(fileName)
 
    async streamFileWithName(fileName: string, stream: Writable): Promise<void> {
       if (this.config.useCache) {
-         const bytes = await this.cache.getZip(fileName);
+         const bytes = await this.cache.getZip(fileName)
          if (is.value<Buffer>(bytes)) {
-            stream.write(bytes, Encoding.Buffer);
-            return;
+            stream.write(bytes, Encoding.Buffer)
+            return
          }
       }
-      const fileID: string | null = await this.getFileIdForName(fileName);
+      const fileID: string | null = await this.getFileIdForName(fileName)
 
       return fileID === null
          ? Promise.resolve()
-         : this.streamFile(fileID, fileName, stream);
+         : this.streamFile(fileID, fileName, stream)
    }
 
    /**
     * Get ID of first file having given name.
     */
    private async getFileIdForName(fileName: string): Promise<string | null> {
-      await this.ensureAccess();
+      await this.ensureAccess()
 
       const params: ListFilesParams = {
          q: `name = '${fileName}' and '${this.config.folderID}' in parents`,
          spaces: QuerySpace.Drive
-      };
+      }
 
-      const files = await this.getFileList(params);
+      const files = await this.getFileList(params)
 
-      return files.length == 0 ? null : files[0].id!;
+      return files.length == 0 ? null : files[0].id!
    }
 
    /**
@@ -343,13 +341,12 @@ export class GoogleDriveClient {
     * matching item.
     */
    private async getFileWithName(fileName: string): Promise<string> {
-      const fileID: string | null = await this.getFileIdForName(fileName);
+      const fileID: string | null = await this.getFileIdForName(fileName)
 
       if (fileID === null) {
-         return Promise.reject(`File not found: “${fileName}”`);
-      } else {
-         return this.readFileWithID(fileID, fileName);
+         return Promise.reject(new Error(`File not found: “${fileName}”`))
       }
+      return this.readFileWithID(fileID, fileName)
    }
 
    /**
@@ -358,19 +355,19 @@ export class GoogleDriveClient {
     * @see https://developers.google.com/drive/v3/web/manage-downloads
     */
    async readFileWithID(fileId: string, fileName: string | null = null) {
-      await this.ensureAccess();
+      await this.ensureAccess()
 
       const params: GetFileParams = {
          fileId,
          alt: ResponseAlt.Media
          //timeout: 10000
-      };
+      }
 
-      const text = await this.getFileData<string>(params, fileName);
+      const text = await this.getFileData<string>(params, fileName)
 
       if (this.config.useCache && fileName !== null) {
-         this.cache.addText(fileName, text);
+         this.cache.addText(fileName, text)
       }
-      return text;
+      return text
    }
 }
